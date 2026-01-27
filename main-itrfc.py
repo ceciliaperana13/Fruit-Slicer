@@ -47,8 +47,9 @@ class Button:
 # === BUTTONS ===
 play_button = Button("PLAY", WIDTH//2 - 150, 320, 300, 70, PURPLE, ORANGE)
 quit_button = Button("QUIT", WIDTH//2 - 150, 420, 300, 70, RED, ORANGE)
-settings_button = Button("SETTINGS", 40, HEIGHT//2 - 35, 200, 70, PURPLE, ORANGE)
-scores_button = Button("SCORES", WIDTH - 240, HEIGHT//2 - 35, 200, 70, PURPLE, ORANGE)
+settings_button = Button("settings", 0, HEIGHT//14 - 35, 200, 70, PURPLE, ORANGE)
+scores_button = Button("scores", WIDTH - 200, HEIGHT//14 - 35, 200, 70, PURPLE, ORANGE)
+
 
 # === MAIN MENU ===
 def main_menu():
@@ -58,7 +59,7 @@ def main_menu():
 
         # Title
         title_text = title_font.render("FINAL FANTASY FRUITS", True, ORANGE)
-        title_rect = title_text.get_rect(center=(WIDTH//2, 150))
+        title_rect = title_text.get_rect(center=(WIDTH//2, 120))
         screen.blit(title_text, title_rect)
 
         subtitle = button_font.render("MAIN MENU", True, WHITE)
