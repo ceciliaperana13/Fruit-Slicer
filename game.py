@@ -29,7 +29,10 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
-background = pygame.image.load('back.jpg')  # game background
+# load and scale background image to fit the screen
+bg_img = pygame.image.load('ff-viii.jpg')
+background = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))  # scale to window size
+
 font = pygame.font.Font(os.path.join(os.getcwd(), 'comic.ttf'), 42)
 lives_icon = pygame.image.load('images/white_lives.png')  # shows remaining lives
 
@@ -117,7 +120,7 @@ while game_running:
         if event.type == pygame.QUIT:
             game_running = False
 
-    gameDisplay.blit(background, (0, 0))
+    gameDisplay.blit(background, (0, 0))  # draw scaled background
 
     score_text = font.render('Score : ' + str(score), True, WHITE)
     gameDisplay.blit(score_text, (0, 0))
@@ -175,5 +178,6 @@ while game_running:
     clock.tick(FPS)
 
 pygame.quit()
+
 
 
