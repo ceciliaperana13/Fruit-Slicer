@@ -3,7 +3,7 @@ from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION
 
 
 class Button:
-    """Bouton cliquable."""
+    """Bouton cliquable pour le menu des paramètres."""
     
     def __init__(self, x, y, width, height, text, font, color, hover_color, text_color):
         self.rect = pygame.Rect(x, y, width, height)

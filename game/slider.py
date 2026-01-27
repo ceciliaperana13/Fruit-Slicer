@@ -1,4 +1,3 @@
-
 import pygame
 from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION
 
@@ -46,7 +45,7 @@ class Slider:
     def draw(self, screen):
         """Dessine le curseur."""
         # Barre de fond
-        pygame.draw.rect(screen, self.color, self.rect)
+        pygame.draw.rect(screen, self.color, self.rect, border_radius=5)
         # Curseur
-        pygame.draw.rect(screen, self.handle_color, self.handle)
-        pygame.draw.rect(screen, (0, 0, 0), self.handle, 2)
+        pygame.draw.rect(screen, self.handle_color, self.handle, border_radius=5)
+        pygame.draw.rect(screen, (0, 0, 0), self.handle, 2, border_radius=5)

@@ -4,6 +4,7 @@ import sys
 from bar_game import TopBar
 from game import Game
 from main_itrfc import MainMenu
+from settings_menu import SettingsMenu
 
 
 def main():
@@ -21,6 +22,9 @@ def main():
     # Créer le menu principal
     main_menu = MainMenu(WIDTH, HEIGHT)
     
+    # Créer le menu des paramètres
+    settings_menu = SettingsMenu(WIDTH, HEIGHT)
+    
     # Créer la barre supérieure
     top_bar = TopBar(WIDTH, height=BAR_HEIGHT)
     
@@ -31,7 +35,7 @@ def main():
     clock = pygame.time.Clock()
     
     # État du jeu
-    game_state = "MENU"  # MENU, PLAYING, GAME_OVER
+    game_state = "MENU"  # MENU, SETTINGS, PLAYING, GAME_OVER
     
     # Boucle principale
     running = True
@@ -52,11 +56,26 @@ def main():
                 elif action == "QUIT":
                     running = False
                 elif action == "SETTINGS":
-                    print("Opening settings...")
-                    # TODO: Implémenter l'écran des paramètres
+                    game_state = "SETTINGS"
                 elif action == "SCORES":
                     print("Showing scores...")
                     # TODO: Implémenter l'écran des scores
+            
+            pygame.display.flip()
+            clock.tick(60)
+        
+        # ===== ÉTAT : SETTINGS =====
+        elif game_state == "SETTINGS":
+            settings_menu.draw(screen)
+            
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    running = False
+                
+                action = settings_menu.handle_event(event)
+                
+                if action == "BACK":
+                    game_state = "MENU"
             
             pygame.display.flip()
             clock.tick(60)
