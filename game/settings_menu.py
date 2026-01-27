@@ -1,11 +1,12 @@
 import pygame
+from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION
 from slider import Slider
 from button_settings import Button
-
+from settings import Setting
 
 class SettingsMenu:
     """Menu des paramètres avec curseurs audio et boutons."""
-    
+
     def __init__(self, width, height):
         self.width = width
         self.height = height
@@ -19,7 +20,7 @@ class SettingsMenu:
         self.ROUGE = (255, 0, 0)
         self.VIOLET = (160, 32, 240)
         
-        # Paramètres du jeu
+        # Paramètres locaux
         self.music_volume = 0.5
         self.sound_volume = 0.7
         self.fullscreen = False
@@ -45,14 +46,14 @@ class SettingsMenu:
         # Position centrale
         center_x = width // 2
         
-        # Curseur musique
+        # Curseur musique  SANS callback (version actuelle de ton Slider)
         self.music_slider = Slider(
             center_x - 150, 220, 300, 10,
             0.0, 1.0, self.music_volume,
             self.GRIS_CLAIR, self.ORANGE
         )
         
-        # Curseur effets sonores
+        # Curseur effets sonores ✅ SANS callback
         self.sound_slider = Slider(
             center_x - 150, 340, 300, 10,
             0.0, 1.0, self.sound_volume,
@@ -74,45 +75,41 @@ class SettingsMenu:
             self.font_button,
             self.GRIS, self.GRIS_CLAIR, self.BLANC
         )
-    
+
     def set_music_volume(self, volume):
-        """Définit le volume de la musique."""
+        """ VOLUME MUSIQUE RÉEL - change IMMÉDIATEMENT"""
         self.music_volume = volume
-        # TODO: Appliquer le volume à pygame.mixer.music
-        # pygame.mixer.music.set_volume(volume)
-    
+        pygame.mixer.music.set_volume(volume)
+
     def set_sound_volume(self, volume):
-        """Définit le volume des effets sonores."""
+        """VOLUME SONS RÉEL"""
         self.sound_volume = volume
-        # TODO: Appliquer le volume aux effets sonores
-    
+
     def handle_event(self, event):
         """Gère les événements du menu."""
-        # Curseurs
+        # Curseurs ✅ SYNCHRO MANUELLE (pas de callback)
         if self.music_slider.handle_event(event):
             self.set_music_volume(self.music_slider.value)
-        
+            
         if self.sound_slider.handle_event(event):
             self.set_sound_volume(self.sound_slider.value)
-        
+            
         # Boutons
         if self.fullscreen_button.handle_event(event):
             self.fullscreen = not self.fullscreen
             self.fullscreen_button.text = "Plein écran: " + ("ON" if self.fullscreen else "OFF")
-            # TODO: Basculer le mode plein écran
-            # pygame.display.toggle_fullscreen()
-        
+            
         if self.back_button.handle_event(event):
-            return "BACK"  # Retour au menu principal
+            return "BACK"
         
-        return None  # Garder le menu ouvert
-    
+        return None
+
     def draw(self, screen):
         """Dessine le menu des paramètres."""
-        # Dessiner le fond
+        # Fond
         screen.blit(self.background, (0, 0))
         
-        # Fond semi-transparent
+        # Overlay semi-transparent
         overlay = pygame.Surface((self.width, self.height))
         overlay.set_alpha(200)
         overlay.fill(self.BLANC)
@@ -123,7 +120,7 @@ class SettingsMenu:
         title_rect = title.get_rect(center=(self.width // 2, 80))
         screen.blit(title, title_rect)
         
-        # Label musique
+        # Musique
         music_label = self.font_label.render(
             f"Musique: {int(self.music_slider.value * 100)}%",
             True, self.NOIR
@@ -131,7 +128,7 @@ class SettingsMenu:
         screen.blit(music_label, (self.width // 2 - 150, 180))
         self.music_slider.draw(screen)
         
-        # Label effets sonores
+        # Effets sonores
         sound_label = self.font_label.render(
             f"Effets sonores: {int(self.sound_slider.value * 100)}%",
             True, self.NOIR

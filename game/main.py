@@ -5,19 +5,30 @@ from bar_game import TopBar
 from game import Game
 from main_itrfc import MainMenu
 from settings_menu import SettingsMenu
+from settings import Setting
+from slider import Slider
+   
+
 
 
 def main():
     """Fonction principale du jeu"""
+    pygame.mixer.pre_init(44100, -16, 2, 512) 
     pygame.init()
+    
+    settings = Setting()
+    settings.play_music()  
     
     # Configuration de l'écran
     WIDTH = 800
-    HEIGHT = 580  # 500 pour le jeu + 80 pour la barre
+    HEIGHT = 580
     BAR_HEIGHT = 80
     
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Final Fantasy Fruits")
+    
+    # Lancer la musique une fois au démarrage
+    settings.play_music()
     
     # Créer le menu principal
     main_menu = MainMenu(WIDTH, HEIGHT)
@@ -35,13 +46,13 @@ def main():
     clock = pygame.time.Clock()
     
     # État du jeu
-    game_state = "MENU"  # MENU, SETTINGS, PLAYING, GAME_OVER
+    game_state = "MENU"  
     
     # Boucle principale
     running = True
     while running:
         
-        # ===== ÉTAT : MENU =====
+        
         if game_state == "MENU":
             main_menu.draw(screen)
             
@@ -97,7 +108,7 @@ def main():
                     elif event.key == K_r:
                         top_bar.reset()   # Réinitialiser le chronomètre
                     elif event.key == pygame.K_d:
-                        game.toggle_debug()  # Activer/Désactiver le mode debug
+                        game.toggle_debug()  
             
             # Vérifier si le temps est écoulé
             if top_bar.is_finished() and not game.is_game_over():
