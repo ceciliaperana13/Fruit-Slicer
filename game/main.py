@@ -1,9 +1,9 @@
 import pygame
 from pygame.locals import QUIT, KEYDOWN, K_ESCAPE, K_f
 import sys
-from settings import Setting
-from settings_menu import *
-from bar_game import TopBar
+from game.settings import Setting
+from game.settings_menu import *
+from game.bar_game import TopBar
 
 
 def main():
