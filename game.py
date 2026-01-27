@@ -30,7 +30,7 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
 # load and scale background image to fit the screen
-bg_img = pygame.image.load('572603.jpg')
+bg_img = pygame.image.load('./images/572603.jpg')
 background = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))  # scale to window size
 
 font = pygame.font.Font(os.path.join(os.getcwd(), 'comic.ttf'), 42)
