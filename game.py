@@ -4,17 +4,17 @@ import random
 
 player_lives = 3  # keep track of lives
 score = 0  # keeps track of score
-fruits = ['melon', 'orange', 'pomegranate', 'guava', 'bomb', 'ice_cube2']  # entities in the game
+fruits = ['melon', 'orange', 'pomegranate', 'guava', 'bomb', 'ice_cube2']
 
-# initialize pygame and create window
+# Screen settings
 WIDTH = 800
 HEIGHT = 500
-FPS = 12  # controls how often the gameDisplay should refresh
+FPS = 12
 
-GRAVITY = 1.2        # gravity force (stronger fall)
-NORMAL_SPEED_FACTOR = 0.3  # normal speed
+GRAVITY = 1.2
+NORMAL_SPEED_FACTOR = 0.3
 SPEED_FACTOR = NORMAL_SPEED_FACTOR
-SPAWN_DELAY = 15    # frames between fruit spawns
+SPAWN_DELAY = 15
 
 spawn_timer = 0
 
@@ -24,48 +24,43 @@ SLOW_MOTION_DURATION = 3  # seconds
 
 pygame.init()
 pygame.display.set_caption('Final fantasy Fruits Game')
-gameDisplay = pygame.display.set_mode((WIDTH, HEIGHT))  # setting game display size
+gameDisplay = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-# Define colors
+# Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
-# load and scale background image to fit the screen
+# Background
 bg_img = pygame.image.load('./images/572603.jpg')
-background = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))  # scale to window size
+background = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))
 
 font = pygame.font.Font(os.path.join(os.getcwd(), 'comic.ttf'), 42)
-lives_icon = pygame.image.load('images/white_lives.png')  # shows remaining lives
+lives_icon = pygame.image.load('images/white_lives.png')
 
-
-# Generalized structure of the fruit Dictionary
+# Generate fruit data
 def generate_random_fruits(fruit):
     fruit_path = "images/" + fruit + ".png"
     data[fruit] = {
         'img': pygame.image.load(fruit_path),
-        'x': random.randint(100, 500),      # x position
-        'y': HEIGHT,                        # start from bottom of the screen
-        'speed_x': random.randint(-10, 10), # horizontal speed (unchanged)
-        'speed_y': random.randint(-80, -60),# vertical speed (unchanged)
-        'throw': True,                      # fruit is ready to be thrown
-        'hit': False,
+        'x': random.randint(100, 500),
+        'y': HEIGHT,
+        'speed_x': random.randint(-10, 10),
+        'speed_y': random.randint(-80, -60),
+        'throw': True,
+        'hit': False
     }
 
-
-# Dictionary to hold the data of fruits
+# Fruit container
 data = {}
 for fruit in fruits:
     generate_random_fruits(fruit)
 
-
-# Generic method to draw fonts on the screen
+# Draw text
 font_name = pygame.font.match_font('comic.ttf')
-
-
 def draw_text(display, text, size, x, y):
     font = pygame.font.Font(font_name, size)
     text_surface = font.render(text, True, BLACK)
@@ -73,8 +68,7 @@ def draw_text(display, text, size, x, y):
     text_rect.midtop = (x, y)
     display.blit(text_surface, text_rect)
 
-
-# draw players lives
+# Draw lives
 def draw_lives(display, x, y, lives, image):
     for i in range(lives):
         img = pygame.image.load(image)
@@ -83,8 +77,7 @@ def draw_lives(display, x, y, lives, image):
         img_rect.y = y
         display.blit(img, img_rect)
 
-
-# show game over display & front display
+# Game over screen
 def show_gameover_screen():
     gameDisplay.blit(background, (0, 0))
     draw_text(gameDisplay, "FINAL FANTASY FRUITS", 90, WIDTH / 2, HEIGHT / 4)
@@ -101,8 +94,7 @@ def show_gameover_screen():
             if event.type == pygame.KEYUP:
                 waiting = False
 
-
-# Game Loop
+# Game loop flags
 first_round = True
 game_over = True
 game_running = True
@@ -125,7 +117,7 @@ while game_running:
         if event.type == pygame.QUIT:
             game_running = False
 
-    gameDisplay.blit(background, (0, 0))  # draw scaled background
+    gameDisplay.blit(background, (0, 0))
 
     score_text = font.render('Score : ' + str(score), True, WHITE)
     gameDisplay.blit(score_text, (0, 0))
@@ -136,9 +128,9 @@ while game_running:
 
     spawn_timer += 1
 
-    # Update slow motion timer
+    # Slow motion update
     if slow_motion_timer > 0:
-        SPEED_FACTOR = 0  # stop movement
+        SPEED_FACTOR = 0
         slow_motion_timer -= 1
     else:
         SPEED_FACTOR = NORMAL_SPEED_FACTOR
@@ -146,7 +138,7 @@ while game_running:
     for key, value in data.items():
         if value['throw']:
 
-            # movement
+            # Movement
             value['x'] += value['speed_x'] * SPEED_FACTOR
             value['y'] += value['speed_y'] * SPEED_FACTOR
             value['speed_y'] += GRAVITY
@@ -155,13 +147,22 @@ while game_running:
             if value['speed_y'] > 35:
                 value['speed_y'] = 35
 
-            # draw fruit
+            # Draw fruit
             if value['y'] <= HEIGHT:
                 gameDisplay.blit(value['img'], (value['x'], value['y']))
             else:
                 value['throw'] = False
 
-            # mouse collision
+                # Lose life if fruit was missed (not bomb, not hit)
+                if not value['hit'] and key != 'bomb':
+                    player_lives -= 1
+
+                    if player_lives <= 0:
+                        show_gameover_screen()
+                        game_over = True
+                        break
+
+            # Mouse collision
             if mouse_pressed[0] and not value['hit']:
                 if value['x'] < current_position[0] < value['x'] + 60 and \
                    value['y'] < current_position[1] < value['y'] + 60:
@@ -180,12 +181,12 @@ while game_running:
                         value['img'] = pygame.image.load("images/half_" + key + ".png")
                         score += 1
 
-                        # Trigger slow motion if ice cube is hit
+                        # Trigger slow motion on ice cube
                         if key == 'ice_cube2':
                             slow_motion_timer = SLOW_MOTION_DURATION * FPS
 
         else:
-            # controlled spawn timing
+            # Respawn fruit after delay
             if spawn_timer >= SPAWN_DELAY:
                 generate_random_fruits(key)
                 spawn_timer = 0
