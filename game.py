@@ -12,10 +12,15 @@ HEIGHT = 500
 FPS = 12  # controls how often the gameDisplay should refresh
 
 GRAVITY = 1.2        # gravity force (stronger fall)
-SPEED_FACTOR = 0.3  # slows movement without changing randint
+NORMAL_SPEED_FACTOR = 0.3  # normal speed
+SPEED_FACTOR = NORMAL_SPEED_FACTOR
 SPAWN_DELAY = 15    # frames between fruit spawns
 
 spawn_timer = 0
+
+# Slow motion variables
+slow_motion_timer = 0
+SLOW_MOTION_DURATION = 3  # seconds
 
 pygame.init()
 pygame.display.set_caption('Final fantasy Fruits Game')
@@ -131,6 +136,13 @@ while game_running:
 
     spawn_timer += 1
 
+    # Update slow motion timer
+    if slow_motion_timer > 0:
+        SPEED_FACTOR = 0  # stop movement
+        slow_motion_timer -= 1
+    else:
+        SPEED_FACTOR = NORMAL_SPEED_FACTOR
+
     for key, value in data.items():
         if value['throw']:
 
@@ -168,6 +180,10 @@ while game_running:
                         value['img'] = pygame.image.load("images/half_" + key + ".png")
                         score += 1
 
+                        # Trigger slow motion if ice cube is hit
+                        if key == 'ice_cube2':
+                            slow_motion_timer = SLOW_MOTION_DURATION * FPS
+
         else:
             # controlled spawn timing
             if spawn_timer >= SPAWN_DELAY:
@@ -178,6 +194,7 @@ while game_running:
     clock.tick(FPS)
 
 pygame.quit()
+
 
 
 
