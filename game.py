@@ -157,7 +157,7 @@ while game_running:
                     value['hit'] = True
 
                     if key == 'bomb':
-                        player_lives -= 1
+                        player_lives -= 3
                         value['img'] = pygame.image.load("images/explosion.png")
 
                         if player_lives <= 0:
