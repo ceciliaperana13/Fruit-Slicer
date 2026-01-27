@@ -3,6 +3,10 @@ from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION
 from slider import Slider
 from button_settings import Button
 from settings import Setting
+from music_manager import MusicManager
+from button_manager import ButtonManager
+
+
 
 class SettingsMenu:
     """Menu des paramètres avec curseurs audio et boutons."""

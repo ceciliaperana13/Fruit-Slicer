@@ -6,8 +6,8 @@ from game import Game
 from main_itrfc import MainMenu
 from settings_menu import SettingsMenu
 from settings import Setting
-from slider import Slider
-   
+from slider import Slider 
+  
 
 
 

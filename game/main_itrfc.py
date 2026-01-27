@@ -75,7 +75,7 @@ class MainMenu:
         
         # Ajouter un overlay semi-transparent pour améliorer la lisibilité
         overlay = pygame.Surface((self.width, self.height))
-        overlay.set_alpha(150)  # Transparence (0-255)
+        overlay.set_alpha(150)  # Transparence 
         overlay.fill(self.BLACK)
         screen.blit(overlay, (0, 0))
         
