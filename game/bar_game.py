@@ -1,24 +1,38 @@
 import pygame
 from datetime import datetime
 
+
 class TopBar:
+    """Classe pour gérer la barre supérieure avec le chronomètre et la date"""
+    
     def __init__(self, width, height=80):
         self.width = width
         self.height = height
-        self.total_time = 90  # 1min 30sec
+        self.total_time = 90  # 1min 30sec (90 secondes)
         self.time_left = self.total_time
         self.timer_running = False
         self.last_tick = 0
         
-        # Couleurs
+        # Couleurs pour le dégradé de fond
         self.color1 = (59, 130, 246)  # Bleu
         self.color2 = (147, 51, 234)  # Violet
         self.white = (255, 255, 255)
         self.red = (239, 68, 68)
+        self.orange = (255, 165, 0)
+        
+        # Couleurs pour la barre de progression
+        self.bar_color_green = (0, 200, 0)
+        self.bar_color_orange = (255, 165, 0)
+        self.bar_color_red = (255, 0, 0)
+        self.bar_bg_color = (50, 50, 50)
         
         # Polices
-        self.font_large = pygame.font.Font(None, 48)
-        self.font_small = pygame.font.Font(None, 24)
+        try:
+            self.font_large = pygame.font.Font('./images/comic.ttf', 48)
+            self.font_small = pygame.font.Font('./images/comic.ttf', 24)
+        except:
+            self.font_large = pygame.font.Font(None, 48)
+            self.font_small = pygame.font.Font(None, 24)
     
     def get_current_date(self):
         """Retourne la date actuelle en français"""
@@ -45,7 +59,7 @@ class TopBar:
         return f"{mins}:{secs:02d}"
     
     def draw_gradient(self, surface):
-        """Dessine le dégradé de fond"""
+        """Dessine le dégradé de fond (bleu vers violet)"""
         for i in range(self.height):
             ratio = i / self.height
             r = int(self.color1[0] * (1 - ratio) + self.color2[0] * ratio)
@@ -87,18 +101,18 @@ class TopBar:
                 self.timer_running = False
     
     def draw(self, surface):
-        """Dessine la barre complète"""
+        """Dessine la barre complète avec dégradé, date, chronomètre et barre de progression"""
         # Dégradé de fond
         self.draw_gradient(surface)
         
         # Date à gauche
         date_text = self.font_small.render(self.get_current_date(), True, self.white)
-        surface.blit(date_text, (20, 30))
+        surface.blit(date_text, (20, 20))
         
-        # Chronomètre à droite
+        # Chronomètre au centre-droit avec fond semi-transparent
         time_color = self.red if self.time_left <= 10 else self.white
         time_text = self.font_large.render(self.format_time(), True, time_color)
-        time_rect = time_text.get_rect(center=(self.width - 150, self.height // 2))
+        time_rect = time_text.get_rect(center=(self.width - 150, self.height // 2 - 10))
         
         # Fond du chronomètre
         timer_bg = pygame.Rect(time_rect.x - 20, time_rect.y - 10, 
@@ -110,6 +124,30 @@ class TopBar:
         pygame.draw.rect(surface, self.white, timer_bg, 2, border_radius=10)
         
         surface.blit(time_text, time_rect)
+        
+        # Barre de progression en bas
+        bar_width = self.width - 40
+        bar_height = 12
+        bar_x = 20
+        bar_y = self.height - 18
+        
+        # Fond de la barre
+        pygame.draw.rect(surface, self.bar_bg_color, (bar_x, bar_y, bar_width, bar_height), border_radius=6)
+        
+        # Barre de progression (qui descend avec le temps)
+        progress = self.time_left / self.total_time
+        progress_width = int(bar_width * progress)
+        
+        # Changer la couleur selon le temps restant
+        if self.time_left <= 10:
+            bar_color = self.bar_color_red
+        elif self.time_left <= 30:
+            bar_color = self.bar_color_orange
+        else:
+            bar_color = self.bar_color_green
+        
+        if progress_width > 0:
+            pygame.draw.rect(surface, bar_color, (bar_x, bar_y, progress_width, bar_height), border_radius=6)
     
     def is_finished(self):
         """Retourne True si le temps est écoulé"""
