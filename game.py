@@ -18,7 +18,7 @@ SPAWN_DELAY = 15    # frames between fruit spawns
 spawn_timer = 0
 
 pygame.init()
-pygame.display.set_caption('Fruit-Ninja Game -- Python.hunt')
+pygame.display.set_caption('Final fantasy Fruits Game')
 gameDisplay = pygame.display.set_mode((WIDTH, HEIGHT))  # setting game display size
 clock = pygame.time.Clock()
 
@@ -30,7 +30,7 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
 # load and scale background image to fit the screen
-bg_img = pygame.image.load('ff-viii.jpg')
+bg_img = pygame.image.load('572603.jpg')
 background = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))  # scale to window size
 
 font = pygame.font.Font(os.path.join(os.getcwd(), 'comic.ttf'), 42)
@@ -63,7 +63,7 @@ font_name = pygame.font.match_font('comic.ttf')
 
 def draw_text(display, text, size, x, y):
     font = pygame.font.Font(font_name, size)
-    text_surface = font.render(text, True, WHITE)
+    text_surface = font.render(text, True, BLACK)
     text_rect = text_surface.get_rect()
     text_rect.midtop = (x, y)
     display.blit(text_surface, text_rect)
@@ -82,7 +82,7 @@ def draw_lives(display, x, y, lives, image):
 # show game over display & front display
 def show_gameover_screen():
     gameDisplay.blit(background, (0, 0))
-    draw_text(gameDisplay, "FRUIT NINJA!", 90, WIDTH / 2, HEIGHT / 4)
+    draw_text(gameDisplay, "FINAL FANTASY FRUITS", 90, WIDTH / 2, HEIGHT / 4)
     draw_text(gameDisplay, "Press any key to start", 50, WIDTH / 2, HEIGHT / 2)
     pygame.display.flip()
 
