@@ -4,7 +4,7 @@ import random
 
 player_lives = 3  # keep track of lives
 score = 0  # keeps track of score
-fruits = ['melon', 'orange', 'pomegranate', 'guava', 'bomb']  # entities in the game
+fruits = ['melon', 'orange', 'pomegranate', 'guava', 'bomb', 'ice_cube2']  # entities in the game
 
 # initialize pygame and create window
 WIDTH = 800
