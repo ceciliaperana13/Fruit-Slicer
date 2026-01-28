@@ -3,6 +3,8 @@ import sys
 
 pygame.init()
 
+pygame.image.load("")
+
 # Screen size
 WIDTH, HEIGHT = 900, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -21,6 +23,9 @@ PURPLE = (160, 32, 240)
 # === FONTS ===
 title_font = pygame.font.SysFont("arialblack", 50)
 button_font = pygame.font.SysFont("arial", 35, bold=True)
+
+# === LOGOS ===
+
 
 # === BUTTON CLASS ===
 class Button:
