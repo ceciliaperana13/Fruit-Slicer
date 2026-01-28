@@ -1,8 +1,10 @@
 import pygame
 import random
+from score import Score
+
 
 class Game:
-    def __init__(self, width=800, height=500):
+    def __init__(self, width=800, height=580):
         """Initialise le jeu"""
         self.WIDTH = width
         self.HEIGHT = height
@@ -22,6 +24,11 @@ class Game:
         self.debug_mode = False
         self.slow_motion_timer = 0
         self.SLOW_MOTION_DURATION = 3  # secondes
+        
+        # Score manager
+        self.score_manager = Score()
+        self.player_name = "Player"  # Nom par défaut
+        self.max_score_reached = 0  # Score max atteint dans la partie
 
         # COMBO
         self.combo = 1
@@ -103,9 +110,14 @@ class Game:
             rect.y = y
             display.blit(img, rect)
 
+    def set_player_name(self, name):
+        """Définit le nom du joueur"""
+        self.player_name = name if name.strip() else "Player"
+
     def start_game(self):
         self.player_lives = 3
         self.score = 0
+        self.max_score_reached = 0
         self.spawn_timer = 0
         self.game_over = False
         self._generate_all_fruits()
@@ -116,7 +128,25 @@ class Game:
         self.combo = 1
 
     def end_game(self):
-        self.game_over = True
+        """Termine la partie et sauvegarde le score"""
+        if not self.game_over:  # Éviter de sauvegarder plusieurs fois
+            self.game_over = True
+            
+            # Déterminer le résultat
+            result = "WIN" if self.score > 0 else "LOSE"
+            
+            # Calculer les tentatives (erreurs) basées sur les vies perdues
+            attempts = 3 - self.player_lives
+            max_attempts = 3
+            
+            # Sauvegarder le score
+            self.score_manager.add_score(
+                player_name=self.player_name,
+                word=f"Score-{self.score}",  # Mot = indicateur de score
+                result=result,
+                attempts=attempts,
+                max_attempts=max_attempts
+            )
 
     def is_game_over(self):
         return self.game_over
@@ -190,6 +220,9 @@ class Game:
                             # COMBO UP + SCORE MULTIPLIÉ
                             self.combo = min(self.combo + 1, self.max_combo)
                             self.score += self.combo
+                            
+                            # Suivre le score max
+                            self.max_score_reached = max(self.max_score_reached, self.score)
 
                             if key == 'ice_cube2':
                                 self.slow_motion_timer = self.SLOW_MOTION_DURATION * self.FPS
@@ -231,8 +264,9 @@ class Game:
         display.blit(self.background, (0, 0))
         self._draw_text(display, "GAME OVER", 90, self.WIDTH / 2, self.HEIGHT / 4, self.RED)
         self._draw_text(display, f"Score Final: {self.score}", 60, self.WIDTH / 2, self.HEIGHT / 2 - 50, self.WHITE)
-        self._draw_text(display, "Press R to Restart", 40, self.WIDTH / 2, self.HEIGHT / 2 + 50, self.WHITE)
-        self._draw_text(display, "Press ESC for Menu", 40, self.WIDTH / 2, self.HEIGHT / 2 + 100, self.WHITE)
+        self._draw_text(display, "Score sauvegardé!", 35, self.WIDTH / 2, self.HEIGHT / 2 + 10, self.ORANGE)
+        self._draw_text(display, "Press R to Restart", 40, self.WIDTH / 2, self.HEIGHT / 2 + 60, self.WHITE)
+        self._draw_text(display, "Press ESC for Menu", 40, self.WIDTH / 2, self.HEIGHT / 2 + 110, self.WHITE)
         pygame.display.flip()
 
         waiting = True
