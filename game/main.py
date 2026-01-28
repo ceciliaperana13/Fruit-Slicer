@@ -24,7 +24,7 @@ def main():
 
     main_menu = MainMenu(WIDTH, HEIGHT)
     settings_menu = SettingsMenu(WIDTH, HEIGHT)
-    score_manager = Score()  # Gestionnaire de scores
+    score_manager = Score()  
     top_bar = TopBar(WIDTH, height=BAR_HEIGHT)
     game = Game(WIDTH, HEIGHT - BAR_HEIGHT)
     clock = pygame.time.Clock()
