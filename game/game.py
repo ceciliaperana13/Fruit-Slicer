@@ -50,7 +50,7 @@ class Game:
 
     def _load_resources(self):
         try:
-            bg_img = pygame.image.load('./images/572603.jpg')
+            bg_img = pygame.image.load('./images/ff-viii.jpg')
             self.background = pygame.transform.scale(bg_img, (self.WIDTH, self.HEIGHT))
         except:
             self.background = pygame.Surface((self.WIDTH, self.HEIGHT))
