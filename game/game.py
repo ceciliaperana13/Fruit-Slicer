@@ -23,6 +23,10 @@ class Game:
         self.slow_motion_timer = 0
         self.SLOW_MOTION_DURATION = 3  # secondes
 
+        # COMBO
+        self.combo = 1
+        self.max_combo = 10
+
         # Fruits
         self.fruits = ['melon', 'orange', 'pomegranate', 'guava', 'bomb', 'ice_cube2']
 
@@ -108,6 +112,9 @@ class Game:
         self.slow_motion_timer = 0
         self.SPEED_FACTOR = self.NORMAL_SPEED_FACTOR
 
+        # COMBO
+        self.combo = 1
+
     def end_game(self):
         self.game_over = True
 
@@ -141,11 +148,15 @@ class Game:
                 if value['speed_y'] > 35:
                     value['speed_y'] = 35
 
-                # Fruit raté
+                # Fruit raté → perte de vie + reset combo
                 if value['y'] > self.HEIGHT:
                     value['throw'] = False
                     if not value['hit'] and key != 'bomb':
                         self.player_lives -= 1
+
+                        # COMBO RESET
+                        self.combo = 1
+
                         if self.player_lives <= 0:
                             self.end_game()
 
@@ -154,13 +165,19 @@ class Game:
                     if value['x'] < current_position[0] < value['x'] + 60 and \
                        value['y'] + y_offset < current_position[1] < value['y'] + y_offset + 60:
                         value['hit'] = True
+
                         if key == 'bomb':
                             self.player_lives -= 3
+
+                            # COMBO RESET
+                            self.combo = 1
+
                             try:
                                 value['img'] = pygame.image.load("images/explosion.png")
                             except:
                                 value['img'] = pygame.Surface((60, 60))
                                 value['img'].fill((255, 100, 0))
+
                             if self.player_lives <= 0:
                                 self.end_game()
                         else:
@@ -169,7 +186,11 @@ class Game:
                             except:
                                 value['img'] = pygame.Surface((60, 60))
                                 value['img'].fill((0, 255, 0))
-                            self.score += 1
+
+                            # COMBO UP + SCORE MULTIPLIÉ
+                            self.combo = min(self.combo + 1, self.max_combo)
+                            self.score += self.combo
+
                             if key == 'ice_cube2':
                                 self.slow_motion_timer = self.SLOW_MOTION_DURATION * self.FPS
 
@@ -184,6 +205,10 @@ class Game:
         # Score
         score_text = self.font.render(f'Score : {self.score}', True, self.WHITE)
         display.blit(score_text, (0, y_offset))
+
+        # Combo
+        combo_text = self.font.render(f'Combo x{self.combo}', True, self.ORANGE)
+        display.blit(combo_text, (0, y_offset + 40))
 
         # Vies
         self._draw_lives(display, 690, y_offset + 5, self.player_lives, 'images/red_lives.png')
@@ -215,10 +240,11 @@ class Game:
             clock.tick(self.FPS)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    return "MENU"  # Ne ferme pas tout
+                    return "MENU"
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_r:
                         return "RESTART"
                     elif event.key == pygame.K_ESCAPE:
                         return "MENU"
         return "MENU"
+
