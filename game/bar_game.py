@@ -14,8 +14,8 @@ class TopBar:
         self.last_tick = 0
         
         # Couleurs pour le dégradé de fond
-        self.color1 = (59, 130, 246)  # Bleu
-        self.color2 = (147, 51, 234)  # Violet
+        self.color1 = (128, 128, 128)  # Gris
+        self.color2 = (59, 130, 246)  # Bleu
         self.white = (255, 255, 255)
         self.red = (239, 68, 68)
         self.orange = (255, 165, 0)
@@ -59,7 +59,7 @@ class TopBar:
         return f"{mins}:{secs:02d}"
     
     def draw_gradient(self, surface):
-        """Dessine le dégradé de fond (bleu vers violet)"""
+        """Dessine le dégradé de fond (gris vers bleu)"""
         for i in range(self.height):
             ratio = i / self.height
             r = int(self.color1[0] * (1 - ratio) + self.color2[0] * ratio)
