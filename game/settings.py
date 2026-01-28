@@ -27,7 +27,7 @@ class Setting:
         self.fullscreen = False
 
         # Musique et sons
-        self.music_file = "musique/Zelda_Main_Theme_Song.mp3"
+        self.music_file = "musique/Liberi_Fatali_[FINAL FANTASY VIII].mp3"
         self.music_volume = 0.5  # Volume entre 0.0 et 1.0
         self.sound_volume = 0.7  # Volume des effets sonores
 
