@@ -144,7 +144,7 @@ class Score:
         except FileNotFoundError:
             return []
         except Exception as e:
-            print(f"⚠ Erreur lors du chargement: {e}")
+            print(f"Erreur lors du chargement: {e}")
             return []
 
     def save_all_scores(self, scores):
@@ -155,7 +155,7 @@ class Score:
                     line = f"{score['player']}|{score['word']}|{score['result']}|{score['score']}|{score['attempts']}|{score['max_attempts']}|{score['date']}|{score['timestamp']}\n"
                     f.write(line)
         except Exception as e:
-            print(f"⚠ Erreur lors de la sauvegarde: {e}")
+            print(f"Erreur lors de la sauvegarde: {e}")
 
     def add_score(self, player_name, word, result, attempts, max_attempts):
         """
@@ -202,9 +202,9 @@ class Score:
         try:
             with open(self.SCORES_FILE, "w", encoding="utf-8") as f:
                 f.write("")
-            print("✓ Scores effacés")
+            print("Scores effacés")
         except Exception as e:
-            print(f"⚠ Erreur lors de l'effacement: {e}")
+            print(f"Erreur lors de l'effacement: {e}")
 
     def page_scores(self, screen, clock):
         """Affiche l'historique des scores en temps réel depuis scores.txt"""

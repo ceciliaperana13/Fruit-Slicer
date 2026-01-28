@@ -48,7 +48,7 @@ class Setting:
             pygame.mixer.music.set_volume(self.music_volume)
             pygame.mixer.music.play(-1)  # Boucle infinie
         except pygame.error as e:
-            print(f"⚠️  Impossible de charger la musique: {e}")
+            print(f"Impossible de charger la musique: {e}")
             print(f"   Vérifiez que le fichier existe: {self.music_file}")
 
     def set_music_volume(self, volume):

@@ -27,7 +27,7 @@ class Game:
         
         # Score manager
         self.score_manager = Score()
-        self.player_name = "Player"  # Nom par défaut
+        self.player_name = "Player"  # par défaut
         self.max_score_reached = 0  # Score max atteint dans la partie
 
         # COMBO
