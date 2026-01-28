@@ -259,12 +259,12 @@ class Game:
                 True, self.ORANGE
             )
             display.blit(debug_text, (10, y_offset + 50))
-
+    # a revoir 
     def show_gameover_screen(self, display, clock):
         display.blit(self.background, (0, 0))
         self._draw_text(display, "GAME OVER", 90, self.WIDTH / 2, self.HEIGHT / 4, self.RED)
         self._draw_text(display, f"Score Final: {self.score}", 60, self.WIDTH / 2, self.HEIGHT / 2 - 50, self.WHITE)
-        self._draw_text(display, "Score sauvegardé!", 35, self.WIDTH / 2, self.HEIGHT / 2 + 10, self.ORANGE)
+        self._draw_text(display, "Score sauvegardé!", 35, self.WIDTH / 2, self.HEIGHT / 2 + 10, self.WHITE)
         self._draw_text(display, "Press R to Restart", 40, self.WIDTH / 2, self.HEIGHT / 2 + 60, self.WHITE)
         self._draw_text(display, "Press ESC for Menu", 40, self.WIDTH / 2, self.HEIGHT / 2 + 110, self.WHITE)
         pygame.display.flip()

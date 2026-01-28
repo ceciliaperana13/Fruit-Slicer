@@ -100,7 +100,7 @@ class SettingsMenu:
             percent_rect = percent_text.get_rect(center=(self.width / 2, bar_y - 25))
             surface.blit(percent_text, percent_rect)
             
-            # Icônes volume
+            # Icônes volume a voir a faire si je peux
             if volume == 0:
                 icon = "🔇"
             elif volume < 0.3:
