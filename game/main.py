@@ -6,59 +6,38 @@ from game import Game
 from main_itrfc import MainMenu
 from settings_menu import SettingsMenu
 from settings import Setting
-from slider import Slider 
-  
-
-
+from slider import Slider
+from score import Score
 
 def main():
-    """Fonction principale du jeu"""
-    pygame.mixer.pre_init(44100, -16, 2, 512) 
+    pygame.mixer.pre_init(44100, -16, 2, 512)
     pygame.init()
-    
+
     settings = Setting()
-    settings.play_music()  
-    
-    # Configuration de l'écran
-    WIDTH = 800
-    HEIGHT = 580
+    settings.play_music()
+
+    WIDTH, HEIGHT = 800, 580
     BAR_HEIGHT = 80
     
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Final Fantasy Fruits")
-    
-    # Lancer la musique une fois au démarrage
-    settings.play_music()
-    
-    # Créer le menu principal
+
     main_menu = MainMenu(WIDTH, HEIGHT)
-    
-    # Créer le menu des paramètres
     settings_menu = SettingsMenu(WIDTH, HEIGHT)
-    
-    # Créer la barre supérieure
+    score_manager = Score()  # Gestionnaire de scores
     top_bar = TopBar(WIDTH, height=BAR_HEIGHT)
-    
-    # Créer le jeu
     game = Game(WIDTH, HEIGHT - BAR_HEIGHT)
-    
-    # Horloge pour contrôler le FPS
     clock = pygame.time.Clock()
-    
-    # État du jeu
-    game_state = "MENU"  
-    
-    # Boucle principale
+    game_state = "MENU"
     running = True
+
     while running:
-        
-        
         if game_state == "MENU":
             main_menu.draw(screen)
-            
+
             for event in pygame.event.get():
                 action = main_menu.handle_event(event)
-                
+
                 if action == "START":
                     game_state = "PLAYING"
                     game.start_game()
@@ -69,89 +48,80 @@ def main():
                 elif action == "SETTINGS":
                     game_state = "SETTINGS"
                 elif action == "SCORES":
-                    print("Showing scores...")
-                    # TODO: Implémenter l'écran des scores
-            
+                    game_state = "SCORES"  # Activer l'écran des scores
             pygame.display.flip()
             clock.tick(60)
-        
-        # ===== ÉTAT : SETTINGS =====
+
         elif game_state == "SETTINGS":
             settings_menu.draw(screen)
-            
             for event in pygame.event.get():
                 if event.type == QUIT:
                     running = False
-                
                 action = settings_menu.handle_event(event)
-                
                 if action == "BACK":
                     game_state = "MENU"
-            
             pygame.display.flip()
             clock.tick(60)
-        
-        # ===== ÉTAT : PLAYING =====
+
+        elif game_state == "SCORES":
+            # Affichage de la page des scores
+            action, screen = score_manager.page_scores(screen, clock)
+            if action == "menu":
+                game_state = "MENU"
+            elif action == "quitter":
+                running = False
+
         elif game_state == "PLAYING":
-            # Gérer les événements
+
             for event in pygame.event.get():
                 if event.type == QUIT:
                     running = False
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
-                        # Retour au menu
+
                         game_state = "MENU"
                         top_bar.pause()
-                        continue
+
                     elif event.key == K_SPACE:
-                        top_bar.toggle()  # Démarrer/Pause le chronomètre
+                        top_bar.toggle()
                     elif event.key == K_r:
-                        top_bar.reset()   # Réinitialiser le chronomètre
+                        game.start_game()
+                        top_bar.reset()
+                        top_bar.start()
                     elif event.key == pygame.K_d:
-                        game.toggle_debug()  
-            
-            # Vérifier si le temps est écoulé
+                        game.toggle_debug()
+
             if top_bar.is_finished() and not game.is_game_over():
                 game.end_game()
                 top_bar.pause()
                 game_state = "GAME_OVER"
-            
-            # Vérifier si le jeu est terminé (vies épuisées)
+
             if game.is_game_over():
                 game.end_game()
                 top_bar.pause()
                 game_state = "GAME_OVER"
-            
-            # Mettre à jour
+
             top_bar.update()
             game.update(y_offset=BAR_HEIGHT)
-            
-            # Dessiner tout
-            screen.fill((0, 0, 0))  # Fond noir
-            
-            # Dessiner la barre en haut
+            screen.fill((0, 0, 0))
             top_bar.draw(screen)
-            
-            # Dessiner le jeu en dessous de la barre
+
+    
             game.draw(screen, y_offset=BAR_HEIGHT)
-            
-            # Afficher les instructions
+
             font_small = pygame.font.Font(None, 20)
             instructions = font_small.render(
-                "ESPACE: Timer | R: Reset | D: Debug | ESC: Menu", 
-                True, 
-                (255, 255, 255)
+                "ESPACE: Timer | R: Reset | D: Debug | ESC: Menu",
+                True, (255, 255, 255)
             )
             screen.blit(instructions, (10, HEIGHT - 25))
-            
-            # Mettre à jour l'affichage
+
             pygame.display.flip()
             clock.tick(game.FPS)
-        
-        # ===== ÉTAT : GAME OVER =====
+
         elif game_state == "GAME_OVER":
             action = game.show_gameover_screen(screen, clock)
-            
+
             if action == "RESTART":
                 game_state = "PLAYING"
                 game.start_game()
@@ -160,9 +130,7 @@ def main():
             elif action == "MENU":
                 game_state = "MENU"
                 top_bar.reset()
-            elif action == "QUIT":
-                running = False
-    
+
     pygame.quit()
     sys.exit()
 
