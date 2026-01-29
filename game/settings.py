@@ -2,8 +2,6 @@ import pygame
 from pygame.locals import FULLSCREEN
 
 
-
-
 class Setting:
     """Classe pour gérer les paramètres du jeu Fruit Slicer."""
     
@@ -29,7 +27,7 @@ class Setting:
         self.fullscreen = False
 
         # Musique et sons
-        self.music_file = "musique/Zelda_Main_Theme_Song.mp3"
+        self.music_file = "musique/Liberi_Fatali_[FINAL FANTASY VIII].mp3"
         self.music_volume = 0.5  # Volume entre 0.0 et 1.0
         self.sound_volume = 0.7  # Volume des effets sonores
 
@@ -48,7 +46,7 @@ class Setting:
             pygame.mixer.music.set_volume(self.music_volume)
             pygame.mixer.music.play(-1)  # Boucle infinie
         except pygame.error as e:
-            print(f"Impossible de charger la musique: {e}")
+            print(f"⚠️  Impossible de charger la musique: {e}")
             print(f"   Vérifiez que le fichier existe: {self.music_file}")
 
     def set_music_volume(self, volume):

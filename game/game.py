@@ -27,7 +27,7 @@ class Game:
         
         # Score manager
         self.score_manager = Score()
-        self.player_name = "Player"  # par défaut
+        self.player_name = "Player"  # Nom par défaut
         self.max_score_reached = 0  # Score max atteint dans la partie
 
         # COMBO
@@ -244,7 +244,7 @@ class Game:
         display.blit(combo_text, (0, y_offset + 40))
 
         # Vies
-        self._draw_lives(display, 690, y_offset + 5, self.player_lives, 'images/red_lives.png')
+        self._draw_lives(display, 690, y_offset + 5, self.player_lives, 'images/ff8_vie4(1).png')
 
         # Fruits
         for value in self.data.values():
