@@ -24,6 +24,7 @@ class Game:
         self.debug_mode = False
         self.slow_motion_timer = 0
         self.SLOW_MOTION_DURATION = 3  # secondes
+        self.game_mode = 1  # Mode de jeu (1 ou 2)
         
         # Score manager
         self.score_manager = Score()
@@ -50,7 +51,7 @@ class Game:
 
     def _load_resources(self):
         try:
-            bg_img = pygame.image.load('./images/ff-viii.jpg')
+            bg_img = pygame.image.load('./images/572603.jpg')
             self.background = pygame.transform.scale(bg_img, (self.WIDTH, self.HEIGHT))
         except:
             self.background = pygame.Surface((self.WIDTH, self.HEIGHT))
@@ -68,6 +69,14 @@ class Game:
         except:
             self.lives_icon = pygame.Surface((30, 30))
             self.lives_icon.fill((255, 0, 0))
+
+        # Charger l'image du logo pour le bouton de changement de mode
+        try:
+            self.mode_button_img = pygame.image.load('images/ff8_logo.png')
+        except:
+            # Image de fallback si le logo n'est pas trouvé
+            self.mode_button_img = pygame.Surface((200, 200))
+            self.mode_button_img.fill((100, 100, 100))
 
     def _generate_random_fruits(self, fruit):
         try:
@@ -113,6 +122,15 @@ class Game:
     def set_player_name(self, name):
         """Définit le nom du joueur"""
         self.player_name = name if name.strip() else "Player"
+
+    def get_game_mode(self):
+        """Retourne le mode de jeu actuel"""
+        return self.game_mode
+
+    def set_game_mode(self, mode):
+        """Définit le mode de jeu (1 ou 2)"""
+        if mode in [1, 2]:
+            self.game_mode = mode
 
     def start_game(self):
         self.player_lives = 3
@@ -259,19 +277,47 @@ class Game:
                 True, self.ORANGE
             )
             display.blit(debug_text, (10, y_offset + 50))
-    # a revoir 
-    def show_gameover_screen(self, display, clock):
-        display.blit(self.background, (0, 0))
-        self._draw_text(display, "GAME OVER", 90, self.WIDTH / 2, self.HEIGHT / 4, self.RED)
-        self._draw_text(display, f"Score Final: {self.score}", 60, self.WIDTH / 2, self.HEIGHT / 2 - 50, self.WHITE)
-        self._draw_text(display, "Score sauvegardé!", 35, self.WIDTH / 2, self.HEIGHT / 2 + 10, self.WHITE)
-        self._draw_text(display, "Press R to Restart", 40, self.WIDTH / 2, self.HEIGHT / 2 + 60, self.WHITE)
-        self._draw_text(display, "Press ESC for Menu", 40, self.WIDTH / 2, self.HEIGHT / 2 + 110, self.WHITE)
-        pygame.display.flip()
 
+    def show_gameover_screen(self, display, clock):
+        """Affiche l'écran game over qui remplit tout l'écran"""
+        # Obtenir les dimensions réelles de la fenêtre
+        screen_width, screen_height = display.get_size()
+        
+        # Créer un fond semi-transparent sombre qui couvre tout l'écran
+        overlay = pygame.Surface((screen_width, screen_height))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(200)
+        
         waiting = True
         while waiting:
             clock.tick(self.FPS)
+            
+            # Remplir tout l'écran avec le fond noir
+            display.fill((0, 0, 0))
+            
+            # Redessiner le fond de jeu (scalé si nécessaire)
+            bg_scaled = pygame.transform.scale(self.background, (screen_width, screen_height))
+            display.blit(bg_scaled, (0, 0))
+            display.blit(overlay, (0, 0))
+            
+            # Calculer le centre de l'écran réel
+            center_x = screen_width // 2
+            
+            # Titre "GAME OVER"
+            self._draw_text(display, "GAME OVER", 90, center_x, int(screen_height * 0.20), self.RED)
+            
+            # Score final
+            self._draw_text(display, f"Score Final: {self.score}", 60, center_x, int(screen_height * 0.40), self.WHITE)
+            
+            # Message de sauvegarde
+            self._draw_text(display, "Score sauvegardé!", 35, center_x, int(screen_height * 0.52), self.ORANGE)
+            
+            # Instructions
+            self._draw_text(display, "Press R to Restart", 40, center_x, int(screen_height * 0.70), self.WHITE)
+            self._draw_text(display, "Press ESC for Menu", 40, center_x, int(screen_height * 0.78), self.WHITE)
+            
+            pygame.display.flip()
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return "MENU"
@@ -280,4 +326,5 @@ class Game:
                         return "RESTART"
                     elif event.key == pygame.K_ESCAPE:
                         return "MENU"
+        
         return "MENU"
