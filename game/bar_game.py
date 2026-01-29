@@ -95,7 +95,15 @@ class TopBar:
     def handle_event(self, event):
         """Gère les événements de la souris pour le bouton"""
         if event.type == pygame.MOUSEMOTION:
+            # Détecter le survol
+            old_hover = self.button_hovered
             self.button_hovered = self.button_rect.collidepoint(event.pos)
+            
+            # Changer le curseur
+            if self.button_hovered:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:  # Clic gauche
@@ -117,47 +125,42 @@ class TopBar:
         print(f"Mode de jeu changé: {self.game_mode}")
     
     def draw_button(self, surface):
-        """Dessine le bouton de mode de jeu"""
-        # Fond semi-transparent
-        bg_surface = pygame.Surface((self.button_width, self.button_height), pygame.SRCALPHA)
-        
-        if self.button_pressed:
-            bg_surface.fill((200, 200, 200, 150))
-        elif self.button_hovered:
-            bg_surface.fill((255, 255, 255, 180))
-        else:
-            bg_surface.fill((255, 255, 255, 120))
-        
-        surface.blit(bg_surface, (self.button_x, self.button_y))
-        
-        # Bordure
-        border_width = 3 if self.button_hovered else 2
-        pygame.draw.rect(surface, self.white, self.button_rect, border_width, border_radius=10)
-        
-        # Image du bouton (centrée) avec effet hover
+        """Dessine le bouton de mode de jeu - Seulement l'image avec effet de survol"""
+        # Image du bouton avec effet hover
         if self.button_image:
-            # Position de base
-            image_x = self.button_x + (self.button_width - self.button_image.get_width()) // 2
-            image_y = self.button_y + (self.button_height - self.button_image.get_height()) // 2
-            
-            # Effet hover : image légèrement plus grande
-            if self.button_hovered or self.button_pressed:
-                # Agrandir l'image de 10%
-                scale_factor = 1.1 if self.button_hovered and not self.button_pressed else 0.95
-                new_width = int(self.button_image.get_width() * scale_factor)
-                new_height = int(self.button_image.get_height() * scale_factor)
-                scaled_image = pygame.transform.scale(self.button_image, (new_width, new_height))
-                
-                # Recentrer l'image agrandie
-                image_x = self.button_x + (self.button_width - new_width) // 2
-                image_y = self.button_y + (self.button_height - new_height) // 2
-                
-                # Ajouter un effet de luminosité
-                hover_surface = scaled_image.copy()
-                hover_surface.set_alpha(255 if self.button_pressed else 230)
-                surface.blit(hover_surface, (image_x, image_y))
+            # Calculer la taille selon l'état
+            if self.button_pressed:
+                # Image légèrement plus petite quand pressée
+                scale_factor = 0.9
+            elif self.button_hovered:
+                # Image plus grande au survol
+                scale_factor = 1.3
             else:
-                surface.blit(self.button_image, (image_x, image_y))
+                # Taille normale
+                scale_factor = 1.0
+            
+            # Calculer la nouvelle taille
+            base_size = self.button_width - 10
+            new_width = int(base_size * scale_factor)
+            new_height = int(base_size * scale_factor)
+            
+            # Redimensionner l'image depuis l'image originale chargée
+            if scale_factor != 1.0:
+                # Recharger l'image originale pour éviter la dégradation
+                try:
+                    original_image = pygame.image.load('./images/chococo.png')
+                    scaled_image = pygame.transform.smoothscale(original_image, (new_width, new_height))
+                except:
+                    scaled_image = pygame.transform.smoothscale(self.button_image, (new_width, new_height))
+            else:
+                scaled_image = self.button_image
+            
+            # Centrer l'image
+            image_x = self.button_x + (self.button_width - scaled_image.get_width()) // 2
+            image_y = self.button_y + (self.button_height - scaled_image.get_height()) // 2
+            
+            # Dessiner l'image - C'EST TOUT !
+            surface.blit(scaled_image, (image_x, image_y))
     
     def start(self):
         """Démarre le chronomètre"""
@@ -181,7 +184,20 @@ class TopBar:
         self.timer_running = False
     
     def update(self):
-        """Met à jour le chronomètre"""
+        """Met à jour le chronomètre et vérifie le survol du bouton"""
+        # Vérifier le survol du bouton en continu
+        mouse_pos = pygame.mouse.get_pos()
+        old_hover = self.button_hovered
+        self.button_hovered = self.button_rect.collidepoint(mouse_pos)
+        
+        # Mettre à jour le curseur si l'état a changé
+        if self.button_hovered != old_hover:
+            if self.button_hovered:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        
+        # Mise à jour du chronomètre
         if self.timer_running and self.time_left > 0:
             current_tick = pygame.time.get_ticks()
             if current_tick - self.last_tick >= 1000:
