@@ -53,7 +53,7 @@ class SettingsMenu:
             self.GRIS_CLAIR, self.ORANGE
         )
         
-        # Curseur effets sonores ✅ SANS callback
+        # Curseur effets sonores  SANS callback
         self.sound_slider = Slider(
             center_x - 150, 340, 300, 10,
             0.0, 1.0, self.sound_volume,
@@ -87,7 +87,7 @@ class SettingsMenu:
 
     def handle_event(self, event):
         """Gère les événements du menu."""
-        # Curseurs ✅ SYNCHRO MANUELLE (pas de callback)
+        # Curseurs  SYNCHRO MANUELLE (pas de callback)
         if self.music_slider.handle_event(event):
             self.set_music_volume(self.music_slider.value)
             

@@ -48,7 +48,7 @@ def main():
                 elif action == "SETTINGS":
                     game_state = "SETTINGS"
                 elif action == "SCORES":
-                    game_state = "SCORES"  # Activer l'écran des scores
+                    game_state = "SCORES"  
             pygame.display.flip()
             clock.tick(60)
 
