@@ -78,6 +78,15 @@ class Game:
             self.mode_button_img = pygame.Surface((200, 200))
             self.mode_button_img.fill((100, 100, 100))
 
+        # Charger l'image de gel pour l'effet slow motion
+        try:
+            freeze_img = pygame.image.load('images/freeze_overlay.png')
+            self.freeze_overlay = pygame.transform.scale(freeze_img, (self.WIDTH, self.HEIGHT))
+        except:
+            # Image de fallback avec effet de givre
+            self.freeze_overlay = pygame.Surface((self.WIDTH, self.HEIGHT), pygame.SRCALPHA)
+            self.freeze_overlay.fill((200, 220, 255, 100))  # Bleu clair translucide
+
     def _generate_random_fruits(self, fruit):
         try:
             img = pygame.image.load(f"images/{fruit}.png")
@@ -268,6 +277,23 @@ class Game:
         for value in self.data.values():
             if value['throw'] and value['y'] <= self.HEIGHT:
                 display.blit(value['img'], (value['x'], value['y'] + y_offset))
+
+        # EFFET DE GEL - Afficher l'overlay quand slow motion est actif
+        if self.slow_motion_timer > 0:
+            # Créer une surface temporaire à la bonne taille si nécessaire
+            screen_width, screen_height = display.get_size()
+            if self.freeze_overlay.get_width() != screen_width or self.freeze_overlay.get_height() != screen_height:
+                # Redimensionner l'overlay pour correspondre à la taille de l'écran
+                try:
+                    freeze_img = pygame.image.load('./images/gel3.png')
+                    freeze_scaled = pygame.transform.scale(freeze_img, (screen_width, screen_height))
+                except:
+                    freeze_scaled = pygame.transform.scale(self.freeze_overlay, (screen_width, screen_height))
+            else:
+                freeze_scaled = self.freeze_overlay
+            
+            # Superposer l'effet de gel avec transparence
+            display.blit(freeze_scaled, (0, y_offset))
 
         # Debug
         if self.debug_mode:
