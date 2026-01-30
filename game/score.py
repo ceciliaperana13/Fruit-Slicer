@@ -131,7 +131,7 @@ class Score:
                         if len(parts) >= 7:
                             score_entry = {
                                 "player": parts[0],
-                                "word": parts[1],
+                                "mode": parts[1],  # Changé de "word" à "mode"
                                 "result": parts[2],
                                 "score": int(parts[3]),
                                 "attempts": int(parts[4]),
@@ -152,35 +152,40 @@ class Score:
         try:
             with open(self.SCORES_FILE, "w", encoding="utf-8") as f:
                 for score in scores:
-                    line = f"{score['player']}|{score['word']}|{score['result']}|{score['score']}|{score['attempts']}|{score['max_attempts']}|{score['date']}|{score['timestamp']}\n"
+                    line = f"{score['player']}|{score['mode']}|{score['result']}|{score['score']}|{score['attempts']}|{score['max_attempts']}|{score['date']}|{score['timestamp']}\n"
                     f.write(line)
         except Exception as e:
             print(f"Erreur lors de la sauvegarde: {e}")
 
-    def add_score(self, player_name, word, result, attempts, max_attempts):
+    def add_score(self, player_name, word, result, attempts, max_attempts, final_score=None):
         """
         Ajoute un nouveau score à scores.txt
         
         Args:
             player_name: Nom du joueur
-            word: Mot à deviner
+            word: Mode de jeu (ex: "Mode 1" ou "Mode 2")
             result: "WIN" ou "LOSE"
             attempts: Nombre d'erreurs faites
             max_attempts: Nombre maximum d'erreurs autorisées
+            final_score: Score final de la partie (NOUVEAU - obligatoire)
         """
         scores = self.load_scores()
         
-        # Calculer le score (100 points max - points perdus pour chaque erreur)
-        if result == "WIN":
-            score_value = max(100 - (attempts * 10), 10)  # Minimum 10 points
+        # Utiliser le score final passé en paramètre
+        if final_score is not None:
+            score_value = final_score  # On prend le score tel quel, même si c'est 0
         else:
-            score_value = 0
+            # Ancien calcul (fallback)
+            if result == "WIN":
+                score_value = max(100 - (attempts * 10), 10)
+            else:
+                score_value = 0
         
         new_score = {
             "player": player_name,
-            "word": word,
+            "mode": word,  # "Mode 1" ou "Mode 2"
             "result": result,
-            "score": score_value,
+            "score": score_value,  # Le score final, même si LOSE
             "attempts": attempts,
             "max_attempts": max_attempts,
             "date": datetime.now().strftime("%d/%m/%Y %H:%M"),
@@ -195,7 +200,7 @@ class Score:
         # Sauvegarder dans le fichier
         self.save_all_scores(scores)
         
-        print(f"✓ Score sauvegardé: {player_name} - {result} - {score_value} points")
+        print(f"✓ Score sauvegardé: {player_name} - {word} - {result} - {score_value} points")
 
     def clear_scores(self):
         """Efface tous les scores du fichier"""
@@ -207,7 +212,7 @@ class Score:
             print(f"Erreur lors de l'effacement: {e}")
 
     def page_scores(self, screen, clock):
-        """Affiche l'historique des scores en temps réel depuis scores.txt"""
+        """Affiche l'historique des scores en temps réel depuis scores.txt avec tous les effets"""
         
         btn_return = Button(300, 520, 200, 50, "RETURN", self.GREEN)
         btn_clear = Button(100, 520, 180, 50, "CLEAR ALL", self.RED)
@@ -242,7 +247,7 @@ class Score:
             btn_return.check_hover(pos)
             btn_clear.check_hover(pos)
             
-            # Dessiner le fond animé
+            # Dessiner le fond animé avec particules
             self.draw_background(screen)
             self.update_particles(self.particles, screen.get_width(), screen.get_height())
             
@@ -263,23 +268,23 @@ class Score:
                 header_bg.fill((255, 255, 255, 30))
                 screen.blit(header_bg, (20, y_offset - 5))
                 
-                rank_text = header_font.render("Rank", True, self.WHITE)
+                rank_text = header_font.render("#", True, self.WHITE)
                 player_text = header_font.render("Player", True, self.WHITE)
-                word_text = header_font.render("Word", True, self.WHITE)
+                mode_text = header_font.render("Mode", True, self.WHITE)
                 result_text = header_font.render("Result", True, self.WHITE)
                 score_text = header_font.render("Score", True, self.WHITE)
                 date_text = header_font.render("Date", True, self.WHITE)
                 
                 screen.blit(rank_text, (30, y_offset))
-                screen.blit(player_text, (100, y_offset))
-                screen.blit(word_text, (250, y_offset))
-                screen.blit(result_text, (380, y_offset))
-                screen.blit(score_text, (480, y_offset))
-                screen.blit(date_text, (570, y_offset))
+                screen.blit(player_text, (80, y_offset))
+                screen.blit(mode_text, (220, y_offset))
+                screen.blit(result_text, (320, y_offset))
+                screen.blit(score_text, (420, y_offset))
+                screen.blit(date_text, (520, y_offset))
                 
                 y_offset += 35
                 
-                # Ligne de séparation
+                # Ligne de séparation avec effet de brillance
                 pygame.draw.line(screen, self.WHITE, (20, y_offset), (780, y_offset), 2)
                 y_offset += 10
                 
@@ -291,36 +296,49 @@ class Score:
                     if item_y < y_offset - 40 or item_y > y_offset + 300:
                         continue
                     
-                    # Fond alterné pour les lignes
+                    # Fond alterné pour les lignes avec effet semi-transparent
                     if i % 2 == 0:
                         row_bg = pygame.Surface((760, 32), pygame.SRCALPHA)
                         row_bg.fill((255, 255, 255, 10))
                         screen.blit(row_bg, (20, item_y - 2))
                     
-                    rank = font.render(f"#{i+1}", True, self.GRAY)
+                    # Rank avec style
+                    rank_color = self.YELLOW if i < 3 else self.GRAY
+                    rank = font.render(f"#{i+1}", True, rank_color)
+                    
+                    # Player
                     player = font.render(score_entry["player"][:12], True, self.WHITE)
-                    word = font.render(score_entry["word"][:10], True, self.WHITE)
+                    
+                    # Mode avec couleur selon le mode
+                    mode_value = score_entry["mode"]
+                    mode_color = self.GREEN if "1" in mode_value else self.BLUE
+                    mode = font.render(mode_value, True, mode_color)
                     
                     # Couleur selon résultat
                     result_color = self.GREEN if score_entry["result"] == "WIN" else self.RED
                     result = font.render(score_entry["result"], True, result_color)
                     
+                    # Score - TOUJOURS affiché, même si 0
                     score_val = font.render(str(score_entry["score"]), True, self.YELLOW)
+                    
+                    # Date
                     date = font.render(score_entry["date"].split()[0], True, self.GRAY)
                     
                     screen.blit(rank, (30, item_y))
-                    screen.blit(player, (100, item_y))
-                    screen.blit(word, (250, item_y))
-                    screen.blit(result, (380, item_y))
-                    screen.blit(score_val, (480, item_y))
-                    screen.blit(date, (570, item_y))
+                    screen.blit(player, (80, item_y))
+                    screen.blit(mode, (220, item_y))
+                    screen.blit(result, (320, item_y))
+                    screen.blit(score_val, (420, item_y))
+                    screen.blit(date, (520, item_y))
                 
-                # Indicateur de scroll
+                # Indicateur de scroll avec effet
                 if max_scroll > 0:
                     info_text = font.render("Use mouse wheel to scroll", True, self.GRAY)
                     screen.blit(info_text, (screen.get_width() // 2 - info_text.get_width() // 2, 470))
             
+            # Boutons avec effets de survol
             btn_clear.draw(screen)
             btn_return.draw(screen)
+            
             pygame.display.flip()
             clock.tick(60)

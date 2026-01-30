@@ -30,7 +30,7 @@ class Game:
         
         # Score manager
         self.score_manager = Score()
-        self.player_name = "Player"  # Nom par défaut
+        self.player_name = "Player"  
         self.max_score_reached = 0  # Score max atteint dans la partie
 
         # COMBO
@@ -246,16 +246,22 @@ class Game:
         if not self.game_over:
             self.game_over = True
             
-            result = "WIN" if self.score > 0 else "LOSE"
+            # On sauvegarde TOUJOURS le score, même si c'est 0
+            result = "WIN" if self.player_lives > 0 else "LOSE"
             attempts = 3 - self.player_lives
             max_attempts = 3
             
+            # Format: afficher le mode de jeu proprement
+            mode_text = f"Mode {self.game_mode}"
+            
+            # Passer le score actuel directement (même s'il est 0)
             self.score_manager.add_score(
                 player_name=self.player_name,
-                word=f"Mode{self.game_mode}-Score{self.score}",
+                word=mode_text,
                 result=result,
                 attempts=attempts,
-                max_attempts=max_attempts
+                max_attempts=max_attempts,
+                final_score=self.score  # Nouveau paramètre pour le score final
             )
 
     def is_game_over(self):
