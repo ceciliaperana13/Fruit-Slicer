@@ -36,6 +36,9 @@ def main():
             main_menu.draw(screen)
 
             for event in pygame.event.get():
+                # Gérer les événements de la TopBar pour le changement de mode
+                top_bar.handle_event(event)
+                
                 action = main_menu.handle_event(event)
 
                 if action == "START":
@@ -48,7 +51,15 @@ def main():
                 elif action == "SETTINGS":
                     game_state = "SETTINGS"
                 elif action == "SCORES":
-                    game_state = "SCORES"  # Activer l'écran des scores
+                    game_state = "SCORES"
+            
+            # Synchroniser le mode entre TopBar et Game
+            topbar_mode = top_bar.get_game_mode()
+            game.set_game_mode(topbar_mode)
+            
+            # Mettre à jour la TopBar pour l'effet hover
+            top_bar.update()
+            
             pygame.display.flip()
             clock.tick(60)
 
@@ -74,11 +85,13 @@ def main():
         elif game_state == "PLAYING":
 
             for event in pygame.event.get():
+                # Gérer les événements de la TopBar
+                top_bar.handle_event(event)
+                
                 if event.type == QUIT:
                     running = False
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
-
                         game_state = "MENU"
                         top_bar.pause()
 
@@ -90,6 +103,18 @@ def main():
                         top_bar.start()
                     elif event.key == pygame.K_d:
                         game.toggle_debug()
+                    else:
+                        # MODE 2: Transmettre les touches au jeu pour les lettres
+                        game.handle_keyboard_input(event)
+
+            # SYNCHRONISATION DU MODE DE JEU
+            topbar_mode = top_bar.get_game_mode()  # "jeu1" ou "jeu2"
+            game.set_game_mode(topbar_mode)  # Convertit en 1 ou 2
+            
+            # Vérification inverse
+            game_mode_text = game.get_game_mode_text()  # "jeu1" ou "jeu2"
+            if game_mode_text != topbar_mode:
+                top_bar.set_game_mode(game_mode_text)
 
             if top_bar.is_finished() and not game.is_game_over():
                 game.end_game()
@@ -109,11 +134,18 @@ def main():
     
             game.draw(screen, y_offset=BAR_HEIGHT)
 
+            # Instructions adaptées au mode
             font_small = pygame.font.Font(None, 20)
-            instructions = font_small.render(
-                "ESPACE: Timer | R: Reset | D: Debug | ESC: Menu",
-                True, (255, 255, 255)
-            )
+            if game.get_game_mode() == 1:
+                instructions = font_small.render(
+                    "MODE 1 - ESPACE: Timer | R: Reset | D: Debug | ESC: Menu",
+                    True, (255, 255, 255)
+                )
+            else:
+                instructions = font_small.render(
+                    "MODE 2 - Tapez les lettres au clavier! | ESPACE: Timer | R: Reset | ESC: Menu",
+                    True, (255, 255, 255)
+                )
             screen.blit(instructions, (10, HEIGHT - 25))
 
             pygame.display.flip()
