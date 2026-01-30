@@ -40,8 +40,8 @@ class Game:
         # MODE 1: Fruits
         self.fruits = ['melon', 'orange', 'pomegranate', 'guava', 'bomb', 'ice_cube2']
         
-        # MODE 2: Lettres
-        self.letters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        # MODE 2: Lettres (réduites à 10)
+        self.letters = list('ABCDEFGHIJ')
         
         # Liste des éléments actifs selon le mode
         self.active_items = []
