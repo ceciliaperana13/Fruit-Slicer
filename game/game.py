@@ -105,8 +105,11 @@ class Game:
             # Mode 1 : seulement les fruits
             self.active_items = self.fruits.copy()
         else:
-            # Mode 2 : seulement les lettres (sans D, P, R)
+            # Mode 2 : lettres + bombe + glaçon
             self.active_items = ['letter_' + letter for letter in self.letters]
+            # Ajouter la bombe et le glaçon au Mode 2
+            self.active_items.append('bomb')
+            self.active_items.append('ice_cube2')
 
     def _create_letter_image(self, letter):
         """Crée une image pour une lettre"""
@@ -137,21 +140,63 @@ class Game:
         
         return img
 
+    def _add_letter_to_item(self, base_img, letter):
+        """Ajoute une lettre sur une image d'item (bombe ou glaçon)"""
+        # Créer une copie de l'image de base
+        new_img = base_img.copy()
+        
+        # Créer le texte de la lettre
+        try:
+            letter_font = pygame.font.Font(self.font_name, 40) if self.font_name else pygame.font.Font(None, 40)
+        except:
+            letter_font = pygame.font.Font(None, 40)
+        
+        # Texte avec contour blanc pour visibilité
+        text = letter_font.render(letter, True, self.WHITE)
+        text_outline = letter_font.render(letter, True, self.BLACK)
+        
+        # Centrer la lettre sur l'image
+        img_width, img_height = new_img.get_size()
+        text_rect = text.get_rect(center=(img_width//2, img_height//2))
+        
+        # Dessiner le contour (décalé de 2px dans chaque direction)
+        for dx, dy in [(-2, -2), (-2, 2), (2, -2), (2, 2), (-2, 0), (2, 0), (0, -2), (0, 2)]:
+            outline_rect = text_rect.copy()
+            outline_rect.x += dx
+            outline_rect.y += dy
+            new_img.blit(text_outline, outline_rect)
+        
+        # Dessiner la lettre blanche par-dessus
+        new_img.blit(text, text_rect)
+        
+        return new_img
+
     def _generate_random_items(self, item):
         """Génère un élément aléatoire (fruit ou lettre)"""
         is_letter = item.startswith('letter_')
+        assigned_letter = None  # Initialiser par défaut
         
         if is_letter:
             letter = item.split('_')[1]
             img = self._create_letter_image(letter)
             item_size = 80
         else:
+            # C'est un fruit, bombe ou glaçon
             try:
                 img = pygame.image.load(f"images/{item}.png")
             except:
                 img = pygame.Surface((60, 60))
                 img.fill((255, 0, 0) if item == 'bomb' else (0, 255, 0))
             item_size = 60
+            
+            # MODE 2: Ajouter une lettre aléatoire sur la bombe et le glaçon
+            if self.game_mode == 2 and (item == 'bomb' or item == 'ice_cube2'):
+                # Choisir une lettre aléatoire parmi notre liste
+                random_letter = random.choice(self.letters)
+                # Créer une nouvelle image avec la lettre superposée
+                img = self._add_letter_to_item(img, random_letter)
+                # Stocker quelle lettre est associée à cet item
+                assigned_letter = random_letter
 
         self.data[item] = {
             'img': img,
@@ -162,7 +207,8 @@ class Game:
             'throw': True,
             'hit': False,
             'is_letter': is_letter,
-            'size': item_size
+            'size': item_size,
+            'assigned_letter': assigned_letter  # Lettre assignée pour bombe/glaçon en Mode 2
         }
 
     def _generate_all_items(self):
@@ -284,9 +330,12 @@ class Game:
             
             # Vérifier que c'est une lettre valide ET qu'elle est dans notre liste
             if len(key_name) == 1 and key_name in self.letters:
+                
+                # Chercher d'abord les lettres normales
                 letter_key = f'letter_{key_name}'
                 
                 if letter_key in self.data and self.data[letter_key]['throw'] and not self.data[letter_key]['hit']:
+                    # Lettre normale trouvée
                     self.data[letter_key]['hit'] = True
                     
                     # Effet visuel
@@ -302,6 +351,48 @@ class Game:
                     self.combo = min(self.combo + 1, self.max_combo)
                     self.score += self.combo
                     self.max_score_reached = max(self.max_score_reached, self.score)
+                
+                else:
+                    # Pas de lettre normale, chercher bombe ou glaçon avec cette lettre
+                    for item_key, item_data in self.data.items():
+                        if item_data['throw'] and not item_data['hit']:
+                            # Vérifier si c'est une bombe ou glaçon avec la lettre assignée
+                            if item_data.get('assigned_letter') == key_name:
+                                item_data['hit'] = True
+                                
+                                if item_key == 'bomb':
+                                    # BOMBE TOUCHÉE
+                                    self.player_lives -= 3
+                                    self.combo = 1
+                                    try:
+                                        item_data['img'] = pygame.image.load("images/explosion.png")
+                                    except:
+                                        item_data['img'] = pygame.Surface((60, 60))
+                                        item_data['img'].fill((255, 100, 0))
+                                    if self.player_lives <= 0:
+                                        self.end_game()
+                                
+                                elif item_key == 'ice_cube2':
+                                    # GLAÇON TOUCHÉ - RALENTISSEMENT
+                                    self.slow_motion_timer = self.SLOW_MOTION_DURATION * self.FPS
+                                    # Effet visuel
+                                    try:
+                                        item_data['img'] = pygame.image.load("images/half_ice_cube2.png")
+                                    except:
+                                        item_data['img'] = pygame.Surface((60, 60))
+                                        item_data['img'].fill((100, 200, 255))
+                                    
+                                    # JOUER LE SON
+                                    if self.settings:
+                                        self.settings.play_impact_sound()
+                                    
+                                    # COMBO UP + SCORE
+                                    self.combo = min(self.combo + 1, self.max_combo)
+                                    self.score += self.combo
+                                    self.max_score_reached = max(self.max_score_reached, self.score)
+                                
+                                # Sortir après avoir trouvé l'item
+                                break
 
     def update(self, y_offset=0):
         if self.game_over:
@@ -314,8 +405,8 @@ class Game:
         
         self.spawn_timer += 1
 
-        # Slow motion (Mode 1 uniquement)
-        if self.game_mode == 1 and self.slow_motion_timer > 0:
+        # Slow motion (fonctionne dans les deux modes)
+        if self.slow_motion_timer > 0:
             self.SPEED_FACTOR = 0
             self.slow_motion_timer -= 1
         else:
@@ -341,7 +432,8 @@ class Game:
                             if self.player_lives <= 0:
                                 self.end_game()
                     else:
-                        if not value['hit']:
+                        # Mode 2 : pénalise seulement les lettres ratées (pas bombe ni glaçon)
+                        if not value['hit'] and key != 'bomb' and key != 'ice_cube2':
                             self.player_lives -= 1
                             self.combo = 1
                             if self.player_lives <= 0:
@@ -417,8 +509,8 @@ class Game:
             if value['throw'] and value['y'] <= self.HEIGHT:
                 display.blit(value['img'], (value['x'], value['y'] + y_offset))
 
-        # Effet gel (Mode 1)
-        if self.game_mode == 1 and self.slow_motion_timer > 0:
+        # Effet gel (fonctionne dans les deux modes)
+        if self.slow_motion_timer > 0:
             screen_width, screen_height = display.get_size()
             if self.freeze_overlay.get_width() != screen_width or self.freeze_overlay.get_height() != screen_height:
                 try:
