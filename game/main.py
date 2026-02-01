@@ -23,10 +23,16 @@ def main():
     pygame.display.set_caption("Final Fantasy Fruits")
 
     main_menu = MainMenu(WIDTH, HEIGHT)
-    settings_menu = SettingsMenu(WIDTH, HEIGHT)
+    
+    # MODIFICATION : Passer settings au SettingsMenu
+    settings_menu = SettingsMenu(WIDTH, HEIGHT, settings=settings)
+    
     score_manager = Score()  
     top_bar = TopBar(WIDTH, height=BAR_HEIGHT)
-    game = Game(WIDTH, HEIGHT - BAR_HEIGHT)
+    
+    # Passer settings au Game
+    game = Game(WIDTH, HEIGHT - BAR_HEIGHT, settings=settings)
+    
     clock = pygame.time.Clock()
     game_state = "MENU"
     running = True

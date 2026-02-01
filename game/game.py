@@ -368,9 +368,9 @@ class Game:
                                 value['img'] = pygame.Surface((60, 60))
                                 value['img'].fill((0, 255, 0))
 
-                            # JOUER LE SON D'IMPACT LORS D'UN HIT
+                            # JOUER LE SON D'IMPACT (même son pour tous)
                             if self.settings:
-                                self.settings.play_impact_sound('./musique/impact (1).mp3')
+                                self.settings.play_impact_sound()
 
                             self.combo = min(self.combo + 1, self.max_combo)
                             self.score += self.combo

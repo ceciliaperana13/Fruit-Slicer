@@ -7,9 +7,12 @@ from settings import Setting
 class SettingsMenu:
     """Menu des paramètres avec curseurs audio et boutons."""
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, settings=None):
         self.width = width
         self.height = height
+        
+        # Référence aux settings pour contrôler le volume du son d'impact
+        self.settings = settings
         
         # Couleurs
         self.BLANC = (255, 255, 255)
@@ -21,8 +24,8 @@ class SettingsMenu:
         self.VIOLET = (160, 32, 240)
         
         # Paramètres locaux
-        self.music_volume = 0.5
-        self.sound_volume = 0.7
+        self.music_volume = settings.music_volume if settings else 0.5
+        self.sound_volume = settings.sound_volume if settings else 0.7
         self.fullscreen = False
         
         # Polices
@@ -53,7 +56,7 @@ class SettingsMenu:
             self.GRIS_CLAIR, self.ORANGE
         )
         
-        # Curseur effets sonores  SANS callback
+        # Curseur effets sonores (son d'impact)  SANS callback
         self.sound_slider = Slider(
             center_x - 150, 340, 300, 10,
             0.0, 1.0, self.sound_volume,
@@ -77,13 +80,19 @@ class SettingsMenu:
         )
 
     def set_music_volume(self, volume):
-        """ VOLUME MUSIQUE RÉEL - change IMMÉDIATEMENT"""
+        """VOLUME MUSIQUE RÉEL - change IMMÉDIATEMENT"""
         self.music_volume = volume
         pygame.mixer.music.set_volume(volume)
+        # Aussi mettre à jour dans settings si disponible
+        if self.settings:
+            self.settings.set_music_volume(volume)
 
     def set_sound_volume(self, volume):
-        """VOLUME SONS RÉEL"""
+        """VOLUME SONS RÉEL - met à jour le son d'impact"""
         self.sound_volume = volume
+        # Mettre à jour le volume du son d'impact dans settings
+        if self.settings:
+            self.settings.set_sound_volume(volume)
 
     def handle_event(self, event):
         """Gère les événements du menu."""
@@ -128,9 +137,9 @@ class SettingsMenu:
         screen.blit(music_label, (self.width // 2 - 150, 180))
         self.music_slider.draw(screen)
         
-        # Effets sonores
+        # Effets sonores (son d'impact)
         sound_label = self.font_label.render(
-            f"Effets sonores: {int(self.sound_slider.value * 100)}%",
+            f"Son d'impact: {int(self.sound_slider.value * 100)}%",
             True, self.NOIR
         )
         screen.blit(sound_label, (self.width // 2 - 150, 300))
