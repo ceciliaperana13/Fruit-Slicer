@@ -42,8 +42,10 @@ class Game:
         # MODE 1: Fruits
         self.fruits = ['melon', 'orange', 'pomegranate', 'guava', 'bomb', 'ice_cube2']
         
-        # MODE 2: Lettres (réduites à 10)
-        self.letters = list('ABCDEFGHIJ')
+        # MODE 2: Lettres (10 lettres seulement, sans D, P, R)
+        # Voyelles: A, E, I, O, U
+        # Consonnes faciles: B, C, F, G, H
+        self.letters = list('AEIOBCFGH')  # 10 lettres
         
         # Liste des éléments actifs selon le mode
         self.active_items = []
@@ -103,7 +105,7 @@ class Game:
             # Mode 1 : seulement les fruits
             self.active_items = self.fruits.copy()
         else:
-            # Mode 2 : seulement les lettres
+            # Mode 2 : seulement les lettres (sans D, P, R)
             self.active_items = ['letter_' + letter for letter in self.letters]
 
     def _create_letter_image(self, letter):
@@ -280,6 +282,7 @@ class Game:
         if event.type == pygame.KEYDOWN:
             key_name = pygame.key.name(event.key).upper()
             
+            # Vérifier que c'est une lettre valide ET qu'elle est dans notre liste
             if len(key_name) == 1 and key_name in self.letters:
                 letter_key = f'letter_{key_name}'
                 
