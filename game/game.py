@@ -4,12 +4,14 @@ from score import Score
 
 
 class Game:
-    def __init__(self, width=800, height=580):
+    def __init__(self, width=800, height=580, settings=None):
         """Initialise le jeu"""
         self.WIDTH = width
         self.HEIGHT = height
         self.FPS = 12
-       
+        
+        # Référence aux settings pour accéder au son d'impact
+        self.settings = settings
 
         # Physique
         self.GRAVITY = 1.2
@@ -289,6 +291,10 @@ class Game:
                     img.set_alpha(150)
                     self.data[letter_key]['img'] = img
                     
+                    # JOUER LE SON D'IMPACT
+                    if self.settings:
+                        self.settings.play_impact_sound()
+                    
                     # COMBO UP + SCORE
                     self.combo = min(self.combo + 1, self.max_combo)
                     self.score += self.combo
@@ -361,6 +367,10 @@ class Game:
                             except:
                                 value['img'] = pygame.Surface((60, 60))
                                 value['img'].fill((0, 255, 0))
+
+                            # JOUER LE SON D'IMPACT LORS D'UN HIT
+                            if self.settings:
+                                self.settings.play_impact_sound('./musique/impact (1).mp3')
 
                             self.combo = min(self.combo + 1, self.max_combo)
                             self.score += self.combo
