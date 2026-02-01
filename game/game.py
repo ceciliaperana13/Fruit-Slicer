@@ -105,9 +105,21 @@ class Game:
             # Mode 1 : seulement les fruits
             self.active_items = self.fruits.copy()
         else:
-            # Mode 2 : lettres + bombe + glaçon
-            self.active_items = ['letter_' + letter for letter in self.letters]
-            # Ajouter la bombe et le glaçon au Mode 2
+            # Mode 2 : UNIQUEMENT des fruits avec des lettres dessus (pas de cercles colorés)
+            # Créer 10 fruits pour les 10 lettres
+            self.active_items = []
+            
+            # Les 4 fruits de base
+            base_fruits = ['melon', 'orange', 'pomegranate', 'guava']
+            
+            # Créer 10 fruits avec index pour leur assigner une lettre spécifique
+            for i, letter in enumerate(self.letters):
+                fruit = base_fruits[i % 4]  # Alterner entre les 4 fruits
+                # Créer un identifiant unique avec la lettre assignée
+                fruit_key = f"{fruit}_{letter}"
+                self.active_items.append(fruit_key)
+            
+            # Ajouter la bombe et le glaçon
             self.active_items.append('bomb')
             self.active_items.append('ice_cube2')
 
@@ -174,29 +186,39 @@ class Game:
     def _generate_random_items(self, item):
         """Génère un élément aléatoire (fruit ou lettre)"""
         is_letter = item.startswith('letter_')
-        assigned_letter = None  # Initialiser par défaut
+        assigned_letter = None
         
         if is_letter:
+            # Cercle coloré avec lettre (Mode 1 seulement, ne devrait pas arriver en Mode 2)
             letter = item.split('_')[1]
             img = self._create_letter_image(letter)
             item_size = 80
         else:
             # C'est un fruit, bombe ou glaçon
+            # En Mode 2, extraire le nom du fruit et la lettre assignée (format: fruit_LETTRE)
+            fruit_name = item
+            if self.game_mode == 2 and '_' in item:
+                parts = item.split('_')
+                if parts[0] in ['melon', 'orange', 'pomegranate', 'guava']:
+                    fruit_name = parts[0]
+                    assigned_letter = parts[1]  # La lettre assignée à ce fruit
+            
+            # Charger l'image du fruit/bombe/glaçon
             try:
-                img = pygame.image.load(f"images/{item}.png")
+                img = pygame.image.load(f"images/{fruit_name}.png")
             except:
                 img = pygame.Surface((60, 60))
-                img.fill((255, 0, 0) if item == 'bomb' else (0, 255, 0))
+                img.fill((255, 0, 0) if fruit_name == 'bomb' else (0, 255, 0))
             item_size = 60
             
-            # MODE 2: Ajouter une lettre aléatoire sur la bombe et le glaçon
-            if self.game_mode == 2 and (item == 'bomb' or item == 'ice_cube2'):
-                # Choisir une lettre aléatoire parmi notre liste
-                random_letter = random.choice(self.letters)
-                # Créer une nouvelle image avec la lettre superposée
-                img = self._add_letter_to_item(img, random_letter)
-                # Stocker quelle lettre est associée à cet item
-                assigned_letter = random_letter
+            # MODE 2: Ajouter une lettre sur l'item
+            if self.game_mode == 2:
+                # Si pas de lettre assignée (bombe ou glaçon), en choisir une aléatoire
+                if assigned_letter is None:
+                    assigned_letter = random.choice(self.letters)
+                
+                # Superposer la lettre sur l'image
+                img = self._add_letter_to_item(img, assigned_letter)
 
         self.data[item] = {
             'img': img,
@@ -208,7 +230,7 @@ class Game:
             'hit': False,
             'is_letter': is_letter,
             'size': item_size,
-            'assigned_letter': assigned_letter  # Lettre assignée pour bombe/glaçon en Mode 2
+            'assigned_letter': assigned_letter
         }
 
     def _generate_all_items(self):
@@ -321,78 +343,74 @@ class Game:
         self.debug_mode = not self.debug_mode
 
     def handle_keyboard_input(self, event):
-        """Gère les entrées clavier pour le Mode 2 (lettres)"""
+        """Gère les entrées clavier pour le Mode 2 (fruits avec lettres)"""
         if self.game_mode != 2 or self.game_over:
             return
         
         if event.type == pygame.KEYDOWN:
             key_name = pygame.key.name(event.key).upper()
             
-            # Vérifier que c'est une lettre valide ET qu'elle est dans notre liste
+            # Vérifier que c'est une lettre valide
             if len(key_name) == 1 and key_name in self.letters:
                 
-                # Chercher d'abord les lettres normales
-                letter_key = f'letter_{key_name}'
-                
-                if letter_key in self.data and self.data[letter_key]['throw'] and not self.data[letter_key]['hit']:
-                    # Lettre normale trouvée
-                    self.data[letter_key]['hit'] = True
-                    
-                    # Effet visuel
-                    img = self._create_letter_image(key_name)
-                    img.set_alpha(150)
-                    self.data[letter_key]['img'] = img
-                    
-                    # JOUER LE SON D'IMPACT
-                    if self.settings:
-                        self.settings.play_impact_sound()
-                    
-                    # COMBO UP + SCORE
-                    self.combo = min(self.combo + 1, self.max_combo)
-                    self.score += self.combo
-                    self.max_score_reached = max(self.max_score_reached, self.score)
-                
-                else:
-                    # Pas de lettre normale, chercher bombe ou glaçon avec cette lettre
-                    for item_key, item_data in self.data.items():
-                        if item_data['throw'] and not item_data['hit']:
-                            # Vérifier si c'est une bombe ou glaçon avec la lettre assignée
-                            if item_data.get('assigned_letter') == key_name:
-                                item_data['hit'] = True
+                # Chercher tous les items avec cette lettre assignée
+                for item_key, item_data in self.data.items():
+                    if item_data['throw'] and not item_data['hit']:
+                        # Vérifier si cet item a la lettre assignée
+                        if item_data.get('assigned_letter') == key_name:
+                            item_data['hit'] = True
+                            
+                            # Extraire le nom de base du fruit (sans la lettre)
+                            if '_' in item_key:
+                                base_name = item_key.split('_')[0]
+                            else:
+                                base_name = item_key
+                            
+                            if base_name == 'bomb':
+                                # BOMBE TOUCHÉE
+                                self.player_lives -= 3
+                                self.combo = 1
+                                try:
+                                    item_data['img'] = pygame.image.load("images/explosion.png")
+                                except:
+                                    item_data['img'] = pygame.Surface((60, 60))
+                                    item_data['img'].fill((255, 100, 0))
+                                if self.player_lives <= 0:
+                                    self.end_game()
+                            
+                            elif base_name == 'ice_cube2':
+                                # GLAÇON TOUCHÉ - RALENTISSEMENT
+                                self.slow_motion_timer = self.SLOW_MOTION_DURATION * self.FPS
+                                try:
+                                    item_data['img'] = pygame.image.load("images/half_ice_cube2.png")
+                                except:
+                                    item_data['img'] = pygame.Surface((60, 60))
+                                    item_data['img'].fill((100, 200, 255))
                                 
-                                if item_key == 'bomb':
-                                    # BOMBE TOUCHÉE
-                                    self.player_lives -= 3
-                                    self.combo = 1
-                                    try:
-                                        item_data['img'] = pygame.image.load("images/explosion.png")
-                                    except:
-                                        item_data['img'] = pygame.Surface((60, 60))
-                                        item_data['img'].fill((255, 100, 0))
-                                    if self.player_lives <= 0:
-                                        self.end_game()
+                                if self.settings:
+                                    self.settings.play_impact_sound()
                                 
-                                elif item_key == 'ice_cube2':
-                                    # GLAÇON TOUCHÉ - RALENTISSEMENT
-                                    self.slow_motion_timer = self.SLOW_MOTION_DURATION * self.FPS
-                                    # Effet visuel
-                                    try:
-                                        item_data['img'] = pygame.image.load("images/half_ice_cube2.png")
-                                    except:
-                                        item_data['img'] = pygame.Surface((60, 60))
-                                        item_data['img'].fill((100, 200, 255))
-                                    
-                                    # JOUER LE SON
-                                    if self.settings:
-                                        self.settings.play_impact_sound()
-                                    
-                                    # COMBO UP + SCORE
-                                    self.combo = min(self.combo + 1, self.max_combo)
-                                    self.score += self.combo
-                                    self.max_score_reached = max(self.max_score_reached, self.score)
+                                self.combo = min(self.combo + 1, self.max_combo)
+                                self.score += self.combo
+                                self.max_score_reached = max(self.max_score_reached, self.score)
+                            
+                            else:
+                                # C'EST UN FRUIT
+                                try:
+                                    item_data['img'] = pygame.image.load(f"images/half_{base_name}.png")
+                                except:
+                                    item_data['img'] = pygame.Surface((60, 60))
+                                    item_data['img'].fill((0, 255, 0))
                                 
-                                # Sortir après avoir trouvé l'item
-                                break
+                                if self.settings:
+                                    self.settings.play_impact_sound()
+                                
+                                self.combo = min(self.combo + 1, self.max_combo)
+                                self.score += self.combo
+                                self.max_score_reached = max(self.max_score_reached, self.score)
+                            
+                            # Sortir après avoir trouvé le premier item
+                            break
 
     def update(self, y_offset=0):
         if self.game_over:
@@ -432,8 +450,15 @@ class Game:
                             if self.player_lives <= 0:
                                 self.end_game()
                     else:
-                        # Mode 2 : pénalise seulement les lettres ratées (pas bombe ni glaçon)
-                        if not value['hit'] and key != 'bomb' and key != 'ice_cube2':
+                        # Mode 2 : pénaliser tous les fruits ratés (sauf bombe et glaçon)
+                        # Extraire le nom de base
+                        if '_' in key:
+                            base_name = key.split('_')[0]
+                        else:
+                            base_name = key
+                        
+                        # Pénaliser si c'est un fruit (pas bombe ni glaçon)
+                        if not value['hit'] and base_name not in ['bomb', 'ice_cube2']:
                             self.player_lives -= 1
                             self.combo = 1
                             if self.player_lives <= 0:
