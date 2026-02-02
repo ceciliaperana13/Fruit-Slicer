@@ -129,7 +129,7 @@ class Game:
         img = pygame.Surface((size, size), pygame.SRCALPHA)
         
         colors = [
-            (255, 100, 100),  # Rouge
+            (255, 100, 100),  # RED
             (100, 255, 100),  # Vert
             (100, 100, 255),  # Bleu
             (255, 255, 100),  # Jaune
@@ -163,7 +163,7 @@ class Game:
         except:
             letter_font = pygame.font.Font(None, 40)
         
-        # Texte avec contour blanc pour visibilité
+        # Texte avec contour WHITE pour visibilité
         text = letter_font.render(letter, True, self.WHITE)
         text_outline = letter_font.render(letter, True, self.BLACK)
         
@@ -178,7 +178,7 @@ class Game:
             outline_rect.y += dy
             new_img.blit(text_outline, outline_rect)
         
-        # Dessiner la lettre blanche par-dessus
+        # Dessiner la lettre WHITEhe par-dessus
         new_img.blit(text, text_rect)
         
         return new_img
@@ -388,11 +388,11 @@ class Game:
                                     ice_img = pygame.image.load("images/half_ice_cube2.png")
                                     item_data['img'] = ice_img
                                 except:
-                                    # Si l'image n'existe pas, créer un effet visuel bleu clair
+                                    # Si l'image n'existe pas, créer un effet visuel bleu LIGTH
                                     ice_surface = pygame.Surface((60, 60), pygame.SRCALPHA)
                                     # Dessiner des éclats de glace (plusieurs rectangles bleus)
-                                    ice_surface.fill((150, 220, 255, 200))  # Bleu clair translucide
-                                    # Ajouter des lignes blanches pour effet "brisé"
+                                    ice_surface.fill((150, 220, 255, 200))  # Bleu LIGTH translucide
+                                    # Ajouter des lignes WHITEhes pour effet "brisé"
                                     pygame.draw.line(ice_surface, (255, 255, 255), (10, 10), (50, 50), 2)
                                     pygame.draw.line(ice_surface, (255, 255, 255), (50, 10), (10, 50), 2)
                                     pygame.draw.line(ice_surface, (200, 230, 255), (30, 0), (30, 60), 2)

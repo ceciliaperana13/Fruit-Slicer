@@ -15,13 +15,13 @@ class SettingsMenu:
         self.settings = settings
         
         # Colors
-        self.BLANC = (255, 255, 255)
-        self.NOIR = (0, 0, 0)
-        self.GRIS = (128, 128, 128)
-        self.GRIS_CLAIR = (200, 200, 200)
+        self.WHITE = (255, 255, 255)
+        self.BLACK = (0, 0, 0)
+        self.GREY = (128, 128, 128)
+        self.GREY_LIGTH = (200, 200, 200)
         self.ORANGE = (255, 128, 0)
-        self.ROUGE = (255, 0, 0)
-        self.VIOLET = (160, 32, 240)
+        self.RED = (255, 0, 0)
+        self.PURPLE = (160, 32, 240)
         
         # Local parameters
         self.music_volume = settings.music_volume if settings else 0.5
@@ -53,14 +53,14 @@ class SettingsMenu:
         self.music_slider = Slider(
             center_x - 150, 220, 300, 10,
             0.0, 1.0, self.music_volume,
-            self.GRIS_CLAIR, self.ORANGE
+            self.GREY_LIGTH, self.ORANGE
         )
         
         # Sound effects slider (impact sound) WITHOUT callback
         self.sound_slider = Slider(
             center_x - 150, 340, 300, 10,
             0.0, 1.0, self.sound_volume,
-            self.GRIS_CLAIR, self.ROUGE
+            self.GREY_LIGTH, self.RED
         )
         
         # Fullscreen button
@@ -68,7 +68,7 @@ class SettingsMenu:
             center_x - 100, 420, 200, 50,
             "Fullscreen: OFF",
             self.font_button,
-            self.VIOLET, self.ORANGE, self.BLANC
+            self.PURPLE, self.ORANGE, self.WHITE
         )
         
         # Back button
@@ -76,7 +76,7 @@ class SettingsMenu:
             center_x - 75, 500, 150, 50,
             "Back",
             self.font_button,
-            self.GRIS, self.GRIS_CLAIR, self.BLANC
+            self.GREY, self.GREY_LIGTH, self.WHITE
         )
 
     def set_music_volume(self, volume):
@@ -121,7 +121,7 @@ class SettingsMenu:
         # Semi-transparent overlay
         overlay = pygame.Surface((self.width, self.height))
         overlay.set_alpha(200)
-        overlay.fill(self.BLANC)
+        overlay.fill(self.WHITE)
         screen.blit(overlay, (0, 0))
         
         # Title
@@ -132,7 +132,7 @@ class SettingsMenu:
         # Music
         music_label = self.font_label.render(
             f"Music: {int(self.music_slider.value * 100)}%",
-            True, self.NOIR
+            True, self.BLACK
         )
         screen.blit(music_label, (self.width // 2 - 150, 180))
         self.music_slider.draw(screen)
@@ -140,7 +140,7 @@ class SettingsMenu:
         # Sound effects (impact sound)
         sound_label = self.font_label.render(
             f"Impact sound: {int(self.sound_slider.value * 100)}%",
-            True, self.NOIR
+            True, self.BLACK
         )
         screen.blit(sound_label, (self.width // 2 - 150, 300))
         self.sound_slider.draw(screen)
