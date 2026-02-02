@@ -81,6 +81,25 @@ class MainMenu:
             self.RED, self.ORANGE, 
             self.button_font, self.BROWN
         )
+
+        try:
+            self.sound_hover = pygame.mixer.Sound("./musique/menu-move.ogg")
+            self.sound_click = pygame.mixer.Sound("./musique/game-start.ogg")
+
+            self.sound_hover.set_volume(0.3)
+            self.sound_click.set_volume(0.5)
+        except:
+            print("Warning: sounds not found")
+            self.sound_hover = None
+            self.sound_click = None
+
+        # === ÉTATS HOVER (anti-spam son) ===
+        self.hover_states = {
+            "play": False,
+            "quit": False,
+            "settings": False,
+            "scores": False
+        }
         
         
         # Settings en haut à droite
@@ -172,6 +191,19 @@ class MainMenu:
         mouse_pos = pygame.mouse.get_pos()
         self.settings_hovered = self.settings_button_rect.collidepoint(mouse_pos)
         self.scores_hovered = self.scores_button_rect.collidepoint(mouse_pos)
+        # === SON AU SURVOL ===
+        def handle_hover(name, rect):
+            is_hovered = rect.collidepoint(mouse_pos)
+            if is_hovered and not self.hover_states[name]:
+                if self.sound_hover:
+                    self.sound_hover.play()
+            self.hover_states[name] = is_hovered
+
+        handle_hover("play", self.play_button.rect)
+        handle_hover("quit", self.quit_button.rect)
+        handle_hover("settings", self.settings_button_rect)
+        handle_hover("scores", self.scores_button_rect)
+
     
     def handle_event(self, event):
         """Gère les événements du menu et retourne l'action correspondante"""
@@ -179,17 +211,25 @@ class MainMenu:
             return "QUIT"
         
         if self.play_button.is_clicked(event):
+            if self.sound_click:
+                self.sound_click.play()
             return "START"
         
         if self.quit_button.is_clicked(event):
+            if self.sound_click:
+                self.sound_click.play()
             return "QUIT"
         
         # Gestion des clics sur les boutons icônes
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.settings_button_rect.collidepoint(event.pos):
+                if self.sound_click:
+                    self.sound_click.play()
                 return "SETTINGS"
             
             if self.scores_button_rect.collidepoint(event.pos):
+                if self.sound_click:
+                    self.sound_click.play()
                 return "SCORES"
         
         return None
