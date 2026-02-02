@@ -4,12 +4,14 @@ from score import Score
 
 
 class Game:
-    def __init__(self, width=800, height=580):
+    def __init__(self, width=800, height=580, settings=None):
         """Initialise le jeu"""
         self.WIDTH = width
         self.HEIGHT = height
         self.FPS = 12
-       
+        
+        # Référence aux settings pour accéder au son d'impact
+        self.settings = settings
 
         # Physique
         self.GRAVITY = 1.2
@@ -30,7 +32,7 @@ class Game:
         
         # Score manager
         self.score_manager = Score()
-        self.player_name = "Player"  # Nom par défaut
+        self.player_name = "Player"  
         self.max_score_reached = 0  # Score max atteint dans la partie
 
         # COMBO
@@ -40,8 +42,10 @@ class Game:
         # MODE 1: Fruits
         self.fruits = ['melon', 'orange', 'pomegranate', 'guava', 'bomb', 'ice_cube2']
         
-        # MODE 2: Lettres (réduites à 10)
-        self.letters = list('ABCDEFGHIJ')
+        # MODE 2: Lettres (10 lettres seulement, sans D, P, R)
+        # Voyelles: A, E, I, O, U
+        # Consonnes faciles: B, C, F, G, H
+        self.letters = list('AEIOBCFGH')  # 10 lettres
         
         # Liste des éléments actifs selon le mode
         self.active_items = []
@@ -101,8 +105,23 @@ class Game:
             # Mode 1 : seulement les fruits
             self.active_items = self.fruits.copy()
         else:
-            # Mode 2 : seulement les lettres
-            self.active_items = ['letter_' + letter for letter in self.letters]
+            # Mode 2 : UNIQUEMENT des fruits avec des lettres dessus (pas de cercles colorés)
+            # Créer 10 fruits pour les 10 lettres
+            self.active_items = []
+            
+            # Les 4 fruits de base
+            base_fruits = ['melon', 'orange', 'pomegranate', 'guava']
+            
+            # Créer 10 fruits avec index pour leur assigner une lettre spécifique
+            for i, letter in enumerate(self.letters):
+                fruit = base_fruits[i % 4]  # Alterner entre les 4 fruits
+                # Créer un identifiant unique avec la lettre assignée
+                fruit_key = f"{fruit}_{letter}"
+                self.active_items.append(fruit_key)
+            
+            # Ajouter la bombe et le glaçon
+            self.active_items.append('bomb')
+            self.active_items.append('ice_cube2')
 
     def _create_letter_image(self, letter):
         """Crée une image pour une lettre"""
@@ -133,21 +152,73 @@ class Game:
         
         return img
 
+    def _add_letter_to_item(self, base_img, letter):
+        """Ajoute une lettre sur une image d'item (bombe ou glaçon)"""
+        # Créer une copie de l'image de base
+        new_img = base_img.copy()
+        
+        # Créer le texte de la lettre
+        try:
+            letter_font = pygame.font.Font(self.font_name, 40) if self.font_name else pygame.font.Font(None, 40)
+        except:
+            letter_font = pygame.font.Font(None, 40)
+        
+        # Texte avec contour blanc pour visibilité
+        text = letter_font.render(letter, True, self.WHITE)
+        text_outline = letter_font.render(letter, True, self.BLACK)
+        
+        # Centrer la lettre sur l'image
+        img_width, img_height = new_img.get_size()
+        text_rect = text.get_rect(center=(img_width//2, img_height//2))
+        
+        # Dessiner le contour (décalé de 2px dans chaque direction)
+        for dx, dy in [(-2, -2), (-2, 2), (2, -2), (2, 2), (-2, 0), (2, 0), (0, -2), (0, 2)]:
+            outline_rect = text_rect.copy()
+            outline_rect.x += dx
+            outline_rect.y += dy
+            new_img.blit(text_outline, outline_rect)
+        
+        # Dessiner la lettre blanche par-dessus
+        new_img.blit(text, text_rect)
+        
+        return new_img
+
     def _generate_random_items(self, item):
         """Génère un élément aléatoire (fruit ou lettre)"""
         is_letter = item.startswith('letter_')
+        assigned_letter = None
         
         if is_letter:
+            # Cercle coloré avec lettre (Mode 1 seulement, ne devrait pas arriver en Mode 2)
             letter = item.split('_')[1]
             img = self._create_letter_image(letter)
             item_size = 80
         else:
+            # C'est un fruit, bombe ou glaçon
+            # En Mode 2, extraire le nom du fruit et la lettre assignée (format: fruit_LETTRE)
+            fruit_name = item
+            if self.game_mode == 2 and '_' in item:
+                parts = item.split('_')
+                if parts[0] in ['melon', 'orange', 'pomegranate', 'guava']:
+                    fruit_name = parts[0]
+                    assigned_letter = parts[1]  # La lettre assignée à ce fruit
+            
+            # Charger l'image du fruit/bombe/glaçon
             try:
-                img = pygame.image.load(f"images/{item}.png")
+                img = pygame.image.load(f"images/{fruit_name}.png")
             except:
                 img = pygame.Surface((60, 60))
-                img.fill((255, 0, 0) if item == 'bomb' else (0, 255, 0))
+                img.fill((255, 0, 0) if fruit_name == 'bomb' else (0, 255, 0))
             item_size = 60
+            
+            # MODE 2: Ajouter une lettre sur l'item
+            if self.game_mode == 2:
+                # Si pas de lettre assignée (bombe ou glaçon), en choisir une aléatoire
+                if assigned_letter is None:
+                    assigned_letter = random.choice(self.letters)
+                
+                # Superposer la lettre sur l'image
+                img = self._add_letter_to_item(img, assigned_letter)
 
         self.data[item] = {
             'img': img,
@@ -158,7 +229,8 @@ class Game:
             'throw': True,
             'hit': False,
             'is_letter': is_letter,
-            'size': item_size
+            'size': item_size,
+            'assigned_letter': assigned_letter
         }
 
     def _generate_all_items(self):
@@ -246,16 +318,22 @@ class Game:
         if not self.game_over:
             self.game_over = True
             
-            result = "WIN" if self.score > 0 else "LOSE"
+            # On sauvegarde TOUJOURS le score, même si c'est 0
+            result = "WIN" if self.player_lives > 0 else "LOSE"
             attempts = 3 - self.player_lives
             max_attempts = 3
             
+            # Format: afficher le mode de jeu proprement
+            mode_text = f"Mode {self.game_mode}"
+            
+            # Passer le score actuel directement (même s'il est 0)
             self.score_manager.add_score(
                 player_name=self.player_name,
-                word=f"Mode{self.game_mode}-Score{self.score}",
+                word=mode_text,
                 result=result,
                 attempts=attempts,
-                max_attempts=max_attempts
+                max_attempts=max_attempts,
+                final_score=self.score  # Nouveau paramètre pour le score final
             )
 
     def is_game_over(self):
@@ -265,28 +343,74 @@ class Game:
         self.debug_mode = not self.debug_mode
 
     def handle_keyboard_input(self, event):
-        """Gère les entrées clavier pour le Mode 2 (lettres)"""
+        """Gère les entrées clavier pour le Mode 2 (fruits avec lettres)"""
         if self.game_mode != 2 or self.game_over:
             return
         
         if event.type == pygame.KEYDOWN:
             key_name = pygame.key.name(event.key).upper()
             
+            # Vérifier que c'est une lettre valide
             if len(key_name) == 1 and key_name in self.letters:
-                letter_key = f'letter_{key_name}'
                 
-                if letter_key in self.data and self.data[letter_key]['throw'] and not self.data[letter_key]['hit']:
-                    self.data[letter_key]['hit'] = True
-                    
-                    # Effet visuel
-                    img = self._create_letter_image(key_name)
-                    img.set_alpha(150)
-                    self.data[letter_key]['img'] = img
-                    
-                    # COMBO UP + SCORE
-                    self.combo = min(self.combo + 1, self.max_combo)
-                    self.score += self.combo
-                    self.max_score_reached = max(self.max_score_reached, self.score)
+                # Chercher tous les items avec cette lettre assignée
+                for item_key, item_data in self.data.items():
+                    if item_data['throw'] and not item_data['hit']:
+                        # Vérifier si cet item a la lettre assignée
+                        if item_data.get('assigned_letter') == key_name:
+                            item_data['hit'] = True
+                            
+                            # Extraire le nom de base du fruit (sans la lettre)
+                            if '_' in item_key:
+                                base_name = item_key.split('_')[0]
+                            else:
+                                base_name = item_key
+                            
+                            if base_name == 'bomb':
+                                # BOMBE TOUCHÉE
+                                self.player_lives -= 3
+                                self.combo = 1
+                                try:
+                                    item_data['img'] = pygame.image.load("images/explosion.png")
+                                except:
+                                    item_data['img'] = pygame.Surface((60, 60))
+                                    item_data['img'].fill((255, 100, 0))
+                                if self.player_lives <= 0:
+                                    self.end_game()
+                            
+                            elif base_name == 'ice_cube2':
+                                # GLAÇON TOUCHÉ - RALENTISSEMENT
+                                self.slow_motion_timer = self.SLOW_MOTION_DURATION * self.FPS
+                                try:
+                                    item_data['img'] = pygame.image.load("images/half_ice_cube2.png")
+                                except:
+                                    item_data['img'] = pygame.Surface((60, 60))
+                                    item_data['img'].fill((100, 200, 255))
+                                
+                                if self.settings:
+                                    self.settings.play_impact_sound()
+                                
+                                self.combo = min(self.combo + 1, self.max_combo)
+                                self.score += self.combo
+                                self.max_score_reached = max(self.max_score_reached, self.score)
+                            
+                            else:
+                                # C'EST UN FRUIT
+                                try:
+                                    item_data['img'] = pygame.image.load(f"images/half_{base_name}.png")
+                                except:
+                                    item_data['img'] = pygame.Surface((60, 60))
+                                    item_data['img'].fill((0, 255, 0))
+                                
+                                if self.settings:
+                                    self.settings.play_impact_sound()
+                                
+                                self.combo = min(self.combo + 1, self.max_combo)
+                                self.score += self.combo
+                                self.max_score_reached = max(self.max_score_reached, self.score)
+                            
+                            # Sortir après avoir trouvé le premier item
+                            break
 
     def update(self, y_offset=0):
         if self.game_over:
@@ -299,8 +423,8 @@ class Game:
         
         self.spawn_timer += 1
 
-        # Slow motion (Mode 1 uniquement)
-        if self.game_mode == 1 and self.slow_motion_timer > 0:
+        # Slow motion (fonctionne dans les deux modes)
+        if self.slow_motion_timer > 0:
             self.SPEED_FACTOR = 0
             self.slow_motion_timer -= 1
         else:
@@ -326,7 +450,15 @@ class Game:
                             if self.player_lives <= 0:
                                 self.end_game()
                     else:
-                        if not value['hit']:
+                        # Mode 2 : pénaliser tous les fruits ratés (sauf bombe et glaçon)
+                        # Extraire le nom de base
+                        if '_' in key:
+                            base_name = key.split('_')[0]
+                        else:
+                            base_name = key
+                        
+                        # Pénaliser si c'est un fruit (pas bombe ni glaçon)
+                        if not value['hit'] and base_name not in ['bomb', 'ice_cube2']:
                             self.player_lives -= 1
                             self.combo = 1
                             if self.player_lives <= 0:
@@ -355,6 +487,10 @@ class Game:
                             except:
                                 value['img'] = pygame.Surface((60, 60))
                                 value['img'].fill((0, 255, 0))
+
+                            # JOUER LE SON D'IMPACT (même son pour tous)
+                            if self.settings:
+                                self.settings.play_impact_sound()
 
                             self.combo = min(self.combo + 1, self.max_combo)
                             self.score += self.combo
@@ -398,8 +534,8 @@ class Game:
             if value['throw'] and value['y'] <= self.HEIGHT:
                 display.blit(value['img'], (value['x'], value['y'] + y_offset))
 
-        # Effet gel (Mode 1)
-        if self.game_mode == 1 and self.slow_motion_timer > 0:
+        # Effet gel (fonctionne dans les deux modes)
+        if self.slow_motion_timer > 0:
             screen_width, screen_height = display.get_size()
             if self.freeze_overlay.get_width() != screen_width or self.freeze_overlay.get_height() != screen_height:
                 try:
