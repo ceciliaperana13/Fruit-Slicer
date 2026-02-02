@@ -3,7 +3,7 @@ from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION
 
 
 class Button:
-    """Bouton cliquable."""
+    """Clickable button."""
     
     def __init__(self, x, y, width, height, text, font, color, hover_color, text_color):
         self.rect = pygame.Rect(x, y, width, height)
@@ -15,7 +15,7 @@ class Button:
         self.hovered = False
     
     def handle_event(self, event):
-        """Gère les événements de la souris."""
+        """Handles mouse events."""
         if event.type == MOUSEMOTION:
             self.hovered = self.rect.collidepoint(event.pos)
         elif event.type == MOUSEBUTTONDOWN:
@@ -24,7 +24,7 @@ class Button:
         return False
     
     def draw(self, screen):
-        """Dessine le bouton."""
+        """Draws the button."""
         color = self.hover_color if self.hovered else self.color
         pygame.draw.rect(screen, color, self.rect, border_radius=10)
         pygame.draw.rect(screen, (0, 0, 0), self.rect, 2, border_radius=10)

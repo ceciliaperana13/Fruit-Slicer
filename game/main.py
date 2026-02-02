@@ -24,13 +24,13 @@ def main():
 
     main_menu = MainMenu(WIDTH, HEIGHT)
     
-    # MODIFICATION : Passer settings au SettingsMenu
+    # MODIFICATION: Pass settings to SettingsMenu
     settings_menu = SettingsMenu(WIDTH, HEIGHT, settings=settings)
     
     score_manager = Score()  
     top_bar = TopBar(WIDTH, height=BAR_HEIGHT)
     
-    # Passer settings au Game
+    # Pass settings to Game
     game = Game(WIDTH, HEIGHT - BAR_HEIGHT, settings=settings)
     
     clock = pygame.time.Clock()
@@ -42,7 +42,7 @@ def main():
             main_menu.draw(screen)
 
             for event in pygame.event.get():
-                # Gérer les événements de la TopBar pour le changement de mode
+                # Handle TopBar events for mode changes
                 top_bar.handle_event(event)
                 
                 action = main_menu.handle_event(event)
@@ -59,11 +59,11 @@ def main():
                 elif action == "SCORES":
                     game_state = "SCORES"
             
-            # Synchroniser le mode entre TopBar et Game
+            # Sync the mode between TopBar and Game
             topbar_mode = top_bar.get_game_mode()
             game.set_game_mode(topbar_mode)
             
-            # Mettre à jour la TopBar pour l'effet hover
+            # Update TopBar for hover effects
             top_bar.update()
             
             pygame.display.flip()
@@ -81,7 +81,7 @@ def main():
             clock.tick(60)
 
         elif game_state == "SCORES":
-            # Affichage de la page des scores
+            # Display the scores page
             action, screen = score_manager.page_scores(screen, clock)
             if action == "menu":
                 game_state = "MENU"
@@ -91,7 +91,7 @@ def main():
         elif game_state == "PLAYING":
 
             for event in pygame.event.get():
-                # Gérer les événements de la TopBar
+                # Handle TopBar events
                 top_bar.handle_event(event)
                 
                 if event.type == QUIT:
@@ -110,15 +110,15 @@ def main():
                     elif event.key == pygame.K_d:
                         game.toggle_debug()
                     else:
-                        # MODE 2: Transmettre les touches au jeu pour les lettres
+                        # MODE 2: Forward key presses to the game for letters
                         game.handle_keyboard_input(event)
 
-            # SYNCHRONISATION DU MODE DE JEU
-            topbar_mode = top_bar.get_game_mode()  # "jeu1" ou "jeu2"
-            game.set_game_mode(topbar_mode)  # Convertit en 1 ou 2
+            # SYNC GAME MODE
+            topbar_mode = top_bar.get_game_mode()  # "jeu1" or "jeu2"
+            game.set_game_mode(topbar_mode)  # Converts to 1 or 2
             
-            # Vérification inverse
-            game_mode_text = game.get_game_mode_text()  # "jeu1" ou "jeu2"
+            # Reverse check
+            game_mode_text = game.get_game_mode_text()  # "jeu1" or "jeu2"
             if game_mode_text != topbar_mode:
                 top_bar.set_game_mode(game_mode_text)
 
@@ -137,19 +137,18 @@ def main():
             screen.fill((0, 0, 0))
             top_bar.draw(screen)
 
-    
             game.draw(screen, y_offset=BAR_HEIGHT)
 
-            # Instructions adaptées au mode
+            # Instructions adapted to the mode
             font_small = pygame.font.Font(None, 20)
             if game.get_game_mode() == 1:
                 instructions = font_small.render(
-                    "MODE 1 - ESPACE: Timer | R: Reset | D: Debug | ESC: Menu",
+                    "MODE 1 - SPACE: Timer | R: Reset | D: Debug | ESC: Menu",
                     True, (255, 255, 255)
                 )
             else:
                 instructions = font_small.render(
-                    "MODE 2 - Tapez les lettres au clavier! | ESPACE: Timer | R: Reset | ESC: Menu",
+                    "MODE 2 - Type letters on keyboard! | SPACE: Timer | R: Reset | ESC: Menu",
                     True, (255, 255, 255)
                 )
             screen.blit(instructions, (10, HEIGHT - 25))

@@ -5,16 +5,16 @@ from button_settings import Button
 from settings import Setting
 
 class SettingsMenu:
-    """Menu des paramètres avec curseurs audio et boutons."""
+    """Settings menu with audio sliders and buttons."""
 
     def __init__(self, width, height, settings=None):
         self.width = width
         self.height = height
         
-        # Référence aux settings pour contrôler le volume du son d'impact
+        # Reference to settings to control impact sound volume
         self.settings = settings
         
-        # Couleurs
+        # Colors
         self.BLANC = (255, 255, 255)
         self.NOIR = (0, 0, 0)
         self.GRIS = (128, 128, 128)
@@ -23,12 +23,12 @@ class SettingsMenu:
         self.ROUGE = (255, 0, 0)
         self.VIOLET = (160, 32, 240)
         
-        # Paramètres locaux
+        # Local parameters
         self.music_volume = settings.music_volume if settings else 0.5
         self.sound_volume = settings.sound_volume if settings else 0.7
         self.fullscreen = False
         
-        # Polices
+        # Fonts
         try:
             self.font_title = pygame.font.Font('./images/comic.ttf', 64)
             self.font_label = pygame.font.Font('./images/comic.ttf', 36)
@@ -38,7 +38,7 @@ class SettingsMenu:
             self.font_label = pygame.font.Font(None, 36)
             self.font_button = pygame.font.Font(None, 32)
         
-        # Charger le fond
+        # Load background
         try:
             bg_img = pygame.image.load('./images/572603.jpg')
             self.background = pygame.transform.scale(bg_img, (width, height))
@@ -46,67 +46,67 @@ class SettingsMenu:
             self.background = pygame.Surface((width, height))
             self.background.fill((50, 50, 50))
         
-        # Position centrale
+        # Center position
         center_x = width // 2
         
-        # Curseur musique  SANS callback (version actuelle de ton Slider)
+        # Music slider WITHOUT callback (current version of your Slider)
         self.music_slider = Slider(
             center_x - 150, 220, 300, 10,
             0.0, 1.0, self.music_volume,
             self.GRIS_CLAIR, self.ORANGE
         )
         
-        # Curseur effets sonores (son d'impact)  SANS callback
+        # Sound effects slider (impact sound) WITHOUT callback
         self.sound_slider = Slider(
             center_x - 150, 340, 300, 10,
             0.0, 1.0, self.sound_volume,
             self.GRIS_CLAIR, self.ROUGE
         )
         
-        # Bouton plein écran
+        # Fullscreen button
         self.fullscreen_button = Button(
             center_x - 100, 420, 200, 50,
-            "Plein écran: OFF",
+            "Fullscreen: OFF",
             self.font_button,
             self.VIOLET, self.ORANGE, self.BLANC
         )
         
-        # Bouton retour
+        # Back button
         self.back_button = Button(
             center_x - 75, 500, 150, 50,
-            "Retour",
+            "Back",
             self.font_button,
             self.GRIS, self.GRIS_CLAIR, self.BLANC
         )
 
     def set_music_volume(self, volume):
-        """VOLUME MUSIQUE RÉEL - change IMMÉDIATEMENT"""
+        """REAL MUSIC VOLUME - changes IMMEDIATELY"""
         self.music_volume = volume
         pygame.mixer.music.set_volume(volume)
-        # Aussi mettre à jour dans settings si disponible
+        # Also update in settings if available
         if self.settings:
             self.settings.set_music_volume(volume)
 
     def set_sound_volume(self, volume):
-        """VOLUME SONS RÉEL - met à jour le son d'impact"""
+        """REAL SOUND VOLUME - updates impact sound"""
         self.sound_volume = volume
-        # Mettre à jour le volume du son d'impact dans settings
+        # Update impact sound volume in settings
         if self.settings:
             self.settings.set_sound_volume(volume)
 
     def handle_event(self, event):
-        """Gère les événements du menu."""
-        # Curseurs  SYNCHRO MANUELLE (pas de callback)
+        """Handles menu events."""
+        # Sliders - MANUAL SYNC (no callback)
         if self.music_slider.handle_event(event):
             self.set_music_volume(self.music_slider.value)
             
         if self.sound_slider.handle_event(event):
             self.set_sound_volume(self.sound_slider.value)
             
-        # Boutons
+        # Buttons
         if self.fullscreen_button.handle_event(event):
             self.fullscreen = not self.fullscreen
-            self.fullscreen_button.text = "Plein écran: " + ("ON" if self.fullscreen else "OFF")
+            self.fullscreen_button.text = "Fullscreen: " + ("ON" if self.fullscreen else "OFF")
             
         if self.back_button.handle_event(event):
             return "BACK"
@@ -114,37 +114,37 @@ class SettingsMenu:
         return None
 
     def draw(self, screen):
-        """Dessine le menu des paramètres."""
-        # Fond
+        """Draw the settings menu."""
+        # Background
         screen.blit(self.background, (0, 0))
         
-        # Overlay semi-transparent
+        # Semi-transparent overlay
         overlay = pygame.Surface((self.width, self.height))
         overlay.set_alpha(200)
         overlay.fill(self.BLANC)
         screen.blit(overlay, (0, 0))
         
-        # Titre
-        title = self.font_title.render("PARAMÈTRES", True, self.ORANGE)
+        # Title
+        title = self.font_title.render("SETTINGS", True, self.ORANGE)
         title_rect = title.get_rect(center=(self.width // 2, 80))
         screen.blit(title, title_rect)
         
-        # Musique
+        # Music
         music_label = self.font_label.render(
-            f"Musique: {int(self.music_slider.value * 100)}%",
+            f"Music: {int(self.music_slider.value * 100)}%",
             True, self.NOIR
         )
         screen.blit(music_label, (self.width // 2 - 150, 180))
         self.music_slider.draw(screen)
         
-        # Effets sonores (son d'impact)
+        # Sound effects (impact sound)
         sound_label = self.font_label.render(
-            f"Son d'impact: {int(self.sound_slider.value * 100)}%",
+            f"Impact sound: {int(self.sound_slider.value * 100)}%",
             True, self.NOIR
         )
         screen.blit(sound_label, (self.width // 2 - 150, 300))
         self.sound_slider.draw(screen)
         
-        # Boutons
+        # Buttons
         self.fullscreen_button.draw(screen)
         self.back_button.draw(screen)
