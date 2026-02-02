@@ -222,7 +222,7 @@ class Game:
 
         self.data[item] = {
             'img': img,
-            'x': random.randint(100, self.WIDTH - 100),
+            'x': random.randint(item_size, self.WIDTH - item_size),  # Tenir compte de la taille
             'y': self.HEIGHT,
             'speed_x': random.randint(-10, 10),
             'speed_y': random.randint(-80, -60),
@@ -381,11 +381,22 @@ class Game:
                             elif base_name == 'ice_cube2':
                                 # GLAÇON TOUCHÉ - RALENTISSEMENT
                                 self.slow_motion_timer = self.SLOW_MOTION_DURATION * self.FPS
+                                
+                                # Créer un effet visuel "brisé" pour le glaçon
                                 try:
-                                    item_data['img'] = pygame.image.load("images/half_ice_cube2.png")
+                                    # Essayer de charger l'image half_ice_cube2
+                                    ice_img = pygame.image.load("images/half_ice_cube2.png")
+                                    item_data['img'] = ice_img
                                 except:
-                                    item_data['img'] = pygame.Surface((60, 60))
-                                    item_data['img'].fill((100, 200, 255))
+                                    # Si l'image n'existe pas, créer un effet visuel bleu clair
+                                    ice_surface = pygame.Surface((60, 60), pygame.SRCALPHA)
+                                    # Dessiner des éclats de glace (plusieurs rectangles bleus)
+                                    ice_surface.fill((150, 220, 255, 200))  # Bleu clair translucide
+                                    # Ajouter des lignes blanches pour effet "brisé"
+                                    pygame.draw.line(ice_surface, (255, 255, 255), (10, 10), (50, 50), 2)
+                                    pygame.draw.line(ice_surface, (255, 255, 255), (50, 10), (10, 50), 2)
+                                    pygame.draw.line(ice_surface, (200, 230, 255), (30, 0), (30, 60), 2)
+                                    item_data['img'] = ice_surface
                                 
                                 if self.settings:
                                     self.settings.play_impact_sound()
@@ -438,6 +449,15 @@ class Game:
 
                 if value['speed_y'] > 35:
                     value['speed_y'] = 35
+                
+                # Empêcher les fruits de sortir par les côtés de l'écran
+                item_size = value.get('size', 60)
+                if value['x'] < 0:
+                    value['x'] = 0
+                    value['speed_x'] = abs(value['speed_x'])  # Rebondir
+                elif value['x'] > self.WIDTH - item_size:
+                    value['x'] = self.WIDTH - item_size
+                    value['speed_x'] = -abs(value['speed_x'])  # Rebondir
 
                 # Élément raté
                 if value['y'] > self.HEIGHT:
@@ -482,11 +502,26 @@ class Game:
                             if self.player_lives <= 0:
                                 self.end_game()
                         else:
-                            try:
-                                value['img'] = pygame.image.load(f"images/half_{key}.png")
-                            except:
-                                value['img'] = pygame.Surface((60, 60))
-                                value['img'].fill((0, 255, 0))
+                            # Effet visuel pour fruit ou glaçon coupé
+                            if key == 'ice_cube2':
+                                # Effet spécial pour le glaçon
+                                try:
+                                    value['img'] = pygame.image.load("images/half_ice_cube2.png")
+                                except:
+                                    # Effet visuel bleu "brisé"
+                                    ice_surface = pygame.Surface((60, 60), pygame.SRCALPHA)
+                                    ice_surface.fill((150, 220, 255, 200))
+                                    pygame.draw.line(ice_surface, (255, 255, 255), (10, 10), (50, 50), 2)
+                                    pygame.draw.line(ice_surface, (255, 255, 255), (50, 10), (10, 50), 2)
+                                    pygame.draw.line(ice_surface, (200, 230, 255), (30, 0), (30, 60), 2)
+                                    value['img'] = ice_surface
+                            else:
+                                # Fruits normaux
+                                try:
+                                    value['img'] = pygame.image.load(f"images/half_{key}.png")
+                                except:
+                                    value['img'] = pygame.Surface((60, 60))
+                                    value['img'].fill((0, 255, 0))
 
                             # JOUER LE SON D'IMPACT (même son pour tous)
                             if self.settings:
