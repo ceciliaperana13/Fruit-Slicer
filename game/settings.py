@@ -27,9 +27,14 @@ class Setting:
         self.fullscreen = False
 
         # Musique et sons
-        self.music_file = "musique/Zelda Main Theme Song.mp3"
+        self.music_file = "./musique/Swing De Chocobo (Final Fantasy Series).mp3"
         self.music_volume = 0.5  # Volume entre 0.0 et 1.0
         self.sound_volume = 0.7  # Volume des effets sonores
+        
+        # Son d'impact unique pour tous les éléments
+        self.impact_sound_file = "./musique/impact (1).mp3"
+        self.impact_sound = None
+        self.load_impact_sound()
 
     def apply_screen(self):
         """Retourne la surface de l'écran selon le mode plein écran."""
@@ -40,16 +45,15 @@ class Setting:
         return screen
 
     def play_music(self):
-        """Démarre la musique si un fichier est défini."""
+        """Lance la lecture de la musique de fond."""
         if self.music_file:
             try:
-                pygame.mixer.init()
                 pygame.mixer.music.load(self.music_file)
                 pygame.mixer.music.set_volume(self.music_volume)
                 pygame.mixer.music.play(-1)  # Boucle infinie
             except pygame.error as e:
-                print(f"⚠️  Impossible de charger la musique: {e}")
-                print(f"   Vérifiez que le fichier existe: {self.music_file}")
+                print(f"Impossible de charger la musique: {e}")
+                print(f"Vérifiez que le fichier existe: {self.music_file}")
 
     def set_music_volume(self, volume):
         """Ajuste le volume de la musique."""
@@ -59,3 +63,21 @@ class Setting:
     def set_sound_volume(self, volume):
         """Ajuste le volume des effets sonores."""
         self.sound_volume = max(0.0, min(1.0, volume))
+        if self.impact_sound:
+            self.impact_sound.set_volume(self.sound_volume)
+    
+    def load_impact_sound(self):
+        """Charge le son d'impact."""
+        try:
+            self.impact_sound = pygame.mixer.Sound(self.impact_sound_file)
+            self.impact_sound.set_volume(self.sound_volume)
+            print(f"✓ Son d'impact chargé: {self.impact_sound_file}")
+        except pygame.error as e:
+            print(f"⚠ Impossible de charger le son d'impact: {e}")
+            print(f"Vérifiez que le fichier existe: {self.impact_sound_file}")
+            self.impact_sound = None
+    
+    def play_impact_sound(self):
+        """Joue le son d'impact."""
+        if self.impact_sound:
+            self.impact_sound.play()

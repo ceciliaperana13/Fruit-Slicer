@@ -1,96 +1,173 @@
 import pygame
-from pygame.locals import QUIT, KEYDOWN, K_ESCAPE, K_f
+from pygame.locals import QUIT, KEYDOWN, K_ESCAPE, K_SPACE, K_r
 import sys
-from game.settings import Setting
-from game.settings_menu import *
-from game.bar_game import TopBar
-
+from bar_game import TopBar
+from game import Game
+from main_itrfc import MainMenu
+from settings_menu import SettingsMenu
+from settings import Setting
+from slider import Slider
+from score import Score
 
 def main():
+    pygame.mixer.pre_init(44100, -16, 2, 512)
     pygame.init()
-    
+
     settings = Setting()
-
-    # Appliquer l'écran
-    screen = settings.apply_screen()
-    pygame.display.set_caption("Fruit Slicer")
-
-    # Lancer la musique
     settings.play_music()
 
-    # Menu des paramètres
-    settings_menu = SettingsMenu(settings)
-
-    # Créer la barre de jeu
-    top_bar = TopBar(settings.screen_width, height=80)
-
-    # Boucle principale
-    clock = pygame.time.Clock()
-    running = True
-    show_settings = False
+    WIDTH, HEIGHT = 800, 580
+    BAR_HEIGHT = 80
     
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Final Fantasy Fruits")
+
+    main_menu = MainMenu(WIDTH, HEIGHT)
+    
+    # MODIFICATION : Passer settings au SettingsMenu
+    settings_menu = SettingsMenu(WIDTH, HEIGHT, settings=settings)
+    
+    score_manager = Score()  
+    top_bar = TopBar(WIDTH, height=BAR_HEIGHT)
+    
+    # Passer settings au Game
+    game = Game(WIDTH, HEIGHT - BAR_HEIGHT, settings=settings)
+    
+    clock = pygame.time.Clock()
+    game_state = "MENU"
+    running = True
+
     while running:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                running = False
-            elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    if show_settings:
-                        show_settings = False
-                    else:
-                        running = False
-                elif event.key == K_f:
-                    settings.fullscreen = not settings.fullscreen
-                    screen = settings.apply_screen()
-                    if settings.fullscreen:
-                        info = pygame.display.Info()
-                        settings.screen_width = info.current_w
-                        settings.screen_height = info.current_h
-                        # Recréer la barre avec la nouvelle largeur
-                        top_bar = TopBar(settings.screen_width, height=80)
-                elif event.key == pygame.K_SPACE and not show_settings:
-                    top_bar.toggle()  # Démarrer/Pause le chronomètre
-                elif event.key == pygame.K_r and not show_settings:
-                    top_bar.reset()   # Réinitialiser le chronomètre
+        if game_state == "MENU":
+            main_menu.draw(screen)
 
-            # Gérer les événements du menu des paramètres
-            if show_settings:
-                show_settings = settings_menu.handle_event(event)
+            for event in pygame.event.get():
+                # Gérer les événements de la TopBar pour le changement de mode
+                top_bar.handle_event(event)
+                
+                action = main_menu.handle_event(event)
 
-        # Mettre à jour le chronomètre
-        if not show_settings:
+                if action == "START":
+                    game_state = "PLAYING"
+                    game.start_game()
+                    top_bar.reset()
+                    top_bar.start()
+                elif action == "QUIT":
+                    running = False
+                elif action == "SETTINGS":
+                    game_state = "SETTINGS"
+                elif action == "SCORES":
+                    game_state = "SCORES"
+            
+            # Synchroniser le mode entre TopBar et Game
+            topbar_mode = top_bar.get_game_mode()
+            game.set_game_mode(topbar_mode)
+            
+            # Mettre à jour la TopBar pour l'effet hover
             top_bar.update()
+            
+            pygame.display.flip()
+            clock.tick(60)
 
-        # Remplir le fond
-        screen.fill(settings.bg_color)
-
-        if show_settings:
-            # Afficher le menu des paramètres
+        elif game_state == "SETTINGS":
             settings_menu.draw(screen)
-        else:
-            # Dessiner la barre EN PREMIER après le fill
-            top_bar.draw(screen)
-            
-            # Jeu normal - dessiner un rectangle violet pour test (sous la barre)
-            pygame.draw.rect(screen, settings.VIOLET, (100, 100, 200, 150))
-            
-            # Bouton pour ouvrir les paramètres
-            font = pygame.font.Font(None, 36)
-            text = font.render("Appuyez sur S pour Settings", True, settings.NOIR)
-            screen.blit(text, (200, 500))
-            
-            # Instructions pour le timer
-            timer_info = font.render("ESPACE: Start/Pause | R: Reset", True, settings.NOIR)
-            screen.blit(timer_info, (150, 300))
-            
-            # Vérifier si on appuie sur S
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_s]:
-                show_settings = True
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    running = False
+                action = settings_menu.handle_event(event)
+                if action == "BACK":
+                    game_state = "MENU"
+            pygame.display.flip()
+            clock.tick(60)
 
-        # Mettre à jour l'affichage
-        pygame.display.flip()
-        clock.tick(60)
+        elif game_state == "SCORES":
+            # Affichage de la page des scores
+            action, screen = score_manager.page_scores(screen, clock)
+            if action == "menu":
+                game_state = "MENU"
+            elif action == "quitter":
+                running = False
+
+        elif game_state == "PLAYING":
+
+            for event in pygame.event.get():
+                # Gérer les événements de la TopBar
+                top_bar.handle_event(event)
+                
+                if event.type == QUIT:
+                    running = False
+                elif event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        game_state = "MENU"
+                        top_bar.pause()
+
+                    elif event.key == K_SPACE:
+                        top_bar.toggle()
+                    elif event.key == K_r:
+                        game.start_game()
+                        top_bar.reset()
+                        top_bar.start()
+                    elif event.key == pygame.K_d:
+                        game.toggle_debug()
+                    else:
+                        # MODE 2: Transmettre les touches au jeu pour les lettres
+                        game.handle_keyboard_input(event)
+
+            # SYNCHRONISATION DU MODE DE JEU
+            topbar_mode = top_bar.get_game_mode()  # "jeu1" ou "jeu2"
+            game.set_game_mode(topbar_mode)  # Convertit en 1 ou 2
+            
+            # Vérification inverse
+            game_mode_text = game.get_game_mode_text()  # "jeu1" ou "jeu2"
+            if game_mode_text != topbar_mode:
+                top_bar.set_game_mode(game_mode_text)
+
+            if top_bar.is_finished() and not game.is_game_over():
+                game.end_game()
+                top_bar.pause()
+                game_state = "GAME_OVER"
+
+            if game.is_game_over():
+                game.end_game()
+                top_bar.pause()
+                game_state = "GAME_OVER"
+
+            top_bar.update()
+            game.update(y_offset=BAR_HEIGHT)
+            screen.fill((0, 0, 0))
+            top_bar.draw(screen)
+
+    
+            game.draw(screen, y_offset=BAR_HEIGHT)
+
+            # Instructions adaptées au mode
+            font_small = pygame.font.Font(None, 20)
+            if game.get_game_mode() == 1:
+                instructions = font_small.render(
+                    "MODE 1 - ESPACE: Timer | R: Reset | D: Debug | ESC: Menu",
+                    True, (255, 255, 255)
+                )
+            else:
+                instructions = font_small.render(
+                    "MODE 2 - Tapez les lettres au clavier! | ESPACE: Timer | R: Reset | ESC: Menu",
+                    True, (255, 255, 255)
+                )
+            screen.blit(instructions, (10, HEIGHT - 25))
+
+            pygame.display.flip()
+            clock.tick(game.FPS)
+
+        elif game_state == "GAME_OVER":
+            action = game.show_gameover_screen(screen, clock)
+
+            if action == "RESTART":
+                game_state = "PLAYING"
+                game.start_game()
+                top_bar.reset()
+                top_bar.start()
+            elif action == "MENU":
+                game_state = "MENU"
+                top_bar.reset()
 
     pygame.quit()
     sys.exit()
