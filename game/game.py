@@ -105,8 +105,8 @@ class Game:
             # Mode 1 : seulement les fruits
             self.active_items = self.fruits.copy()
         else:
-            # Mode 2 : UNIQUEMENT des fruits avec des lettres dessus (pas de cercles colorés)
-            # Créer 10 fruits pour les 10 lettres
+            # Mode 2 : UNIQUEMENT des fruits avec des lettres dessus
+            
             self.active_items = []
             
             # Les 4 fruits de base
